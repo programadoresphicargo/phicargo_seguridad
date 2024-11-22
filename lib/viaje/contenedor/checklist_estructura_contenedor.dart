@@ -41,7 +41,7 @@ class _MyHomePageState extends State<checklist_contenedor> {
   Future<void> fetchData() async {
     final response = await http.post(
       Uri.parse(
-          '${conexion}gestion_viajes/checklist/contenedor/get_checklist_contenedor.php'),
+          '${conexion}viajes/checklist/contenedor/getChecklistContenedor.php'),
       body: {
         'id_viaje': widget.id_viaje,
         'id_cp': widget.id_cp,
@@ -59,52 +59,31 @@ class _MyHomePageState extends State<checklist_contenedor> {
             String id_elemento;
             String elemento;
             num? estado;
-            String observacion;
+            String observaciones;
 
-            if (widget.tipo_checklist == 'salida') {
-              id_elemento = records[i]['id_elemento'];
-              elemento = records[i]['nombre_elemento'];
+            id_elemento = records[i]['id_elemento'].toString();
+            elemento = records[i]['nombre_elemento'].toString();
 
-              if (records[i].containsKey('estado_salida')) {
-                estado = records[i]['estado_salida'] == '1' ? 1 : 0;
-              } else {
-                estado = null;
-              }
-
-              if (records[i]['observacion_salida'] != null) {
-                observacion = records[i]['observacion_salida'];
-              } else {
-                observacion = '';
-              }
-              inputControllers.add(
-                TextEditingController(text: records[i]['observacion_salida']),
-              );
+            if (records[i].containsKey('estado')) {
+              estado = records[i]['estado'].toString() == 'true' ? 1 : 0;
             } else {
-              id_elemento = records[i]['id_elemento'];
-              elemento = records[i]['nombre_elemento'];
-
-              if (records[i].containsKey('estado_entrada') &&
-                  records[i]['estado_entrada'] != null) {
-                estado = records[i]['estado_entrada'] == '1' ? 1 : 0;
-              } else {
-                estado = null;
-              }
-
-              if (records[i]['observacion_entrada'] != null) {
-                observacion = records[i]['observacion_entrada'];
-              } else {
-                observacion = '';
-              }
-              inputControllers.add(
-                TextEditingController(text: records[i]['observacion_entrada']),
-              );
+              estado = null;
             }
+
+            if (records[i]['observaciones'] != null) {
+              observaciones = records[i]['observaciones'].toString();
+            } else {
+              observaciones = '';
+            }
+            inputControllers.add(
+              TextEditingController(text: records[i]['observaciones']),
+            );
 
             selectedCheckboxValues.add(Elementos(
               id_elemento: id_elemento,
               elemento: elemento,
               estado: estado,
-              observacion: observacion,
+              observaciones: observaciones,
             ));
           }
 
@@ -114,7 +93,7 @@ class _MyHomePageState extends State<checklist_contenedor> {
             print('ID elemento: ${item.id_elemento}');
             print('Nombre elemento: ${item.elemento}');
             print('estado: ${item.estado}');
-            print('observacion: ${item.observacion}');
+            print('observaciones: ${item.observaciones}');
           }
 
           for (var controller in inputControllers) {
@@ -151,7 +130,7 @@ class _MyHomePageState extends State<checklist_contenedor> {
     try {
       final response = await http.post(
         Uri.parse(
-            '${conexion}gestion_viajes/checklist/contenedor/guardar_checklist_contenedor.php'),
+            '${conexion}viajes/checklist/contenedor/guardarChecklist.php'),
         body: {
           'id_viaje': widget.id_viaje,
           'id_cp': widget.id_cp.toString(),
@@ -173,6 +152,7 @@ class _MyHomePageState extends State<checklist_contenedor> {
           );
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         } else {
+          print(response.body);
           final snackBar = SnackBar(
             backgroundColor: const Color.fromARGB(255, 154, 4, 4),
             content: Text(
@@ -191,6 +171,7 @@ class _MyHomePageState extends State<checklist_contenedor> {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     } catch (e) {
+      print(e);
       final snackBar = SnackBar(
         backgroundColor: Colors.red,
         content: Text('Ocurrió un error: $e'),
@@ -361,9 +342,9 @@ class _MyHomePageState extends State<checklist_contenedor> {
                 num? estado = selectedCheckboxValues[i].estado;
                 if (estado != null && (estado == 0 || estado == 1)) {
                   Map<String, dynamic> jsonData = {
-                    'nombre_elemento': records[i]['id_elemento'],
+                    'id_elemento': records[i]['id_elemento'],
                     'estado': estado,
-                    'observacion': inputControllers[i].text,
+                    'observaciones': inputControllers[i].text,
                   };
                   jsonDataList.add(jsonData);
                 } else {

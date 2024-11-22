@@ -76,47 +76,49 @@ class _CustomDataTableState extends State<CustomDataTable> {
     );
   }
 
+  final TextStyle cellStyle = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 16,
+  );
+
   List<DataColumn> _buildColumns(List<Map<String, dynamic>> data) {
     return [
       DataColumn2(
         size: ColumnSize.S,
-        label: const Text(
+        label: Text(
           'Referencia',
-          style: TextStyle(fontSize: 15),
+          style: cellStyle,
         ),
         onSort: (columnIndex, _) =>
             _sortColumn(columnIndex, 'referencia', data),
       ),
       DataColumn2(
         size: ColumnSize.S,
-        label: const Text(
+        label: Text(
           'Unidad',
-          style: TextStyle(fontSize: 15),
+          style: cellStyle,
         ),
         onSort: (columnIndex, _) => _sortColumn(columnIndex, 'unidad', data),
       ),
       DataColumn2(
         size: ColumnSize.S,
-        label: const Text(
-          'Operador',
-          style: TextStyle(fontSize: 15),
-        ),
+        label: Text('Operador', style: cellStyle),
         onSort: (columnIndex, _) =>
             _sortColumn(columnIndex, 'nombre_operador', data),
       ),
       DataColumn2(
         size: ColumnSize.S,
-        label: const Text(
+        label: Text(
           'Ruta',
-          style: TextStyle(fontSize: 15),
+          style: cellStyle,
         ),
         onSort: (columnIndex, _) => _sortColumn(columnIndex, 'route_id', data),
       ),
       DataColumn2(
         size: ColumnSize.L,
-        label: const Text(
+        label: Text(
           'Salida',
-          style: TextStyle(fontSize: 15),
+          style: cellStyle,
         ),
         onSort: (columnIndex, _) =>
             _sortColumn(columnIndex, 'x_inicio_programado', data),
@@ -131,19 +133,19 @@ class _CustomDataTableState extends State<CustomDataTable> {
         cells: [
           DataCell(
             Container(
-              width: 100,
+              width: 130,
               child: Badge(
                 padding: EdgeInsets.all(6),
                 backgroundColor: Colors.blue,
                 largeSize: 20,
                 textStyle: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 5,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Product Sans'),
                 textColor: Colors.white,
                 label: Text(
                   data['referencia'].toString(),
-                  style: TextStyle(fontSize: 12),
+                  style: cellStyle,
                 ),
                 isLabelVisible: true,
               ),
@@ -151,20 +153,20 @@ class _CustomDataTableState extends State<CustomDataTable> {
           ),
           DataCell(Text(
             data['unidad'].toString(),
-            style: const TextStyle(fontSize: 12),
+            style: cellStyle,
           )),
           DataCell(Text(
             data['nombre_operador'].toString(),
-            style: const TextStyle(fontSize: 12),
+            style: cellStyle,
           )),
           DataCell(Text(
-            data['route_id'].toString(),
-            style: TextStyle(fontSize: 12),
+            data['ruta'].toString(),
+            style: cellStyle,
           )),
           DataCell(
             Text(
-              formatDateTime(data['x_inicio_programado']),
-              style: TextStyle(fontSize: 12),
+              formatDateTime(data['date_start']),
+              style: cellStyle,
             ),
           ),
         ],
@@ -195,8 +197,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
       data['referencia'].toString(),
       data['unidad'].toString(),
       data['nombre_operador'].toString(),
-      data['x_inicio_programado'].toString(),
-      data['est'].toString(),
+      data['date_start'].toString(),
+      data['estado_viaje'].toString(),
     );
   }
 
@@ -212,7 +214,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
 
     try {
       final response = await http.post(
-        Uri.parse('${conexion}gestion_viajes/odoo/getCartas.php'),
+        Uri.parse('${conexion}viajes/odoo/getCartas.php'),
         body: {'id_viaje': id_viaje},
       );
 
@@ -243,7 +245,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
 
     try {
       final response = await http.post(
-        Uri.parse('${conexion}gestion_viajes/odoo/getViaje.php'),
+        Uri.parse('${conexion}viajes/odoo/getViaje.php'),
         body: {'id_viaje': id_viaje},
       );
 

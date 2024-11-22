@@ -1,15 +1,11 @@
 import 'dart:convert';
-
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-
 import '../../conexion/conexion.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Map<String, dynamic>>> comprobar_custodia(String id_viaje) async {
   try {
     final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/odoo/comprobar_custodia.php'),
+      Uri.parse('${conexion}viajes/odoo/comprobar_custodia.php'),
       body: {'id_viaje': id_viaje},
     );
 

@@ -1,25 +1,22 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_signature_pad/flutter_signature_pad.dart';
 import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
+import 'package:phicargo_seguridad/viaje/funciones.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Conexion/Conexion.dart';
-import 'package:data_table_2/data_table_2.dart';
 import 'dart:ui' as ui;
 
 import '../Validador/validador.dart';
 import 'contenedor/panel_contenedor.dart';
 import 'custodia/comprobar_contenedor_checklist.dart';
 import 'custodia/custodia.dart';
-import 'flota/comprobar_contenedor_checklist.dart';
-import 'flota/expanded.dart';
+import 'equipos/comprobar_contenedor_checklist.dart';
+import 'equipos/expanded.dart';
 import 'galeria/galeria.dart';
 import '../menu/menu.dart';
 import 'contenedor/comprobar_contenedor_checklist.dart';
@@ -114,7 +111,7 @@ class _viajeState extends State<viaje> {
 
   Future<void> getViaje(String id_viaje) async {
     final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/odoo/getViaje.php'),
+      Uri.parse('${conexion}viajes/odoo/getViaje.php'),
       body: {'id_viaje': id_viaje},
     );
 
@@ -146,7 +143,7 @@ class _viajeState extends State<viaje> {
   Future<void> getCustodia(String id_viaje) async {
     try {
       final response = await http.post(
-        Uri.parse('${conexion}gestion_viajes/odoo/comprobar_custodia.php'),
+        Uri.parse('${conexion}viajes/odoo/comprobar_custodia.php'),
         body: {'id_viaje': id_viaje},
       );
 
@@ -174,7 +171,7 @@ class _viajeState extends State<viaje> {
 
   Future<List<Record>> getCartas(String id_viaje) async {
     final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/odoo/getCartas.php'),
+      Uri.parse('${conexion}viajes/odoo/getCartas.php'),
       body: {'id_viaje': id_viaje},
     );
     if (response.statusCode == 200) {
@@ -186,13 +183,10 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> disponibilidad_equipos() async {
+  Future<void> cambiar_estados(String estado) async {
     final response = await http.post(
-      Uri.parse(
-          '${conexion}gestion_viajes/disponibilidad/disponibilidad_viaje.php'),
-      body: {
-        'id': widget.id_viaje,
-      },
+      Uri.parse('${conexion}viajes/disponibilidad/cambiar_estados.php'),
+      body: {'id_viaje': widget.id_viaje, 'estado': estado},
     );
 
     if (response.statusCode == 200) {
@@ -203,32 +197,13 @@ class _viajeState extends State<viaje> {
 
   Future<void> disponibilidad_contenedores() async {
     final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/disponibilidad/contenedores.php'),
+      Uri.parse('${conexion}viajes/disponibilidad/contenedores.php'),
       body: {
         'id': widget.id_viaje,
       },
     );
 
     if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
-  Future<String> comprobar_operador() async {
-    final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/odoo/comprobar_operador.php'),
-      body: {
-        'id': widget.id_viaje,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      if (response.body == '1') {
-        return '1';
-      } else {
-        return 'No se puede iniciar el viaje porque el nombre del conductor no concuerda con el operador programado en las cartas porte ligadas, favor de actualizar la información en Odoo e intentar iniciar nuevamente.';
-      }
     } else {
       throw Exception('Failed to load data from server');
     }
@@ -236,8 +211,7 @@ class _viajeState extends State<viaje> {
 
   Future<void> liberar_contenedores() async {
     final response = await http.post(
-      Uri.parse(
-          '${conexion}gestion_viajes/disponibilidad/liberar_contenedores.php'),
+      Uri.parse('${conexion}viajes/disponibilidad/liberar_contenedores.php'),
       body: {
         'id': widget.id_viaje,
       },
@@ -252,7 +226,7 @@ class _viajeState extends State<viaje> {
   Future<String> comprobar_correos() async {
     final response = await http.post(
       Uri.parse(
-          '${conexion}gestion_viajes/correos/ligar_correos/correos_ligados_comprobacion.php'),
+          '${conexion}viajes/correos_electronicos/correosLigadosComprobacion.php'),
       body: {
         'id_viaje': widget.id_viaje,
       },
@@ -304,38 +278,31 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> desmontar_equipo() async {
-    final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/disponibilidad/desmontar.php'),
-      body: {
-        'id': widget.id_viaje,
-      },
-    );
-
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
   Future<void> iniciar_viaje(String id_usuario) async {
     showDialog(
-      barrierDismissible: false,
       context: context,
-      builder: (context) {
-        return Center(
-          child: Lottie.asset('assets/car.json', height: 120),
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+          title: Text('Procesando'),
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Por favor, espere...'),
+            ],
+          ),
         );
       },
     );
 
     final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/algoritmos/envio_manual.php'),
+      Uri.parse('${conexion}viajes/algoritmos/envio_manual.php'),
       body: {
-        'id': widget.id_viaje,
+        'id_viaje': widget.id_viaje,
         'id_usuario': id_usuario,
-        'id_status': '1',
-        'status_nombre': 'Inicio de viaje'
+        'id_estatus': '1',
       },
     );
 
@@ -354,7 +321,7 @@ class _viajeState extends State<viaje> {
         });
 
         disponibilidad_contenedores();
-        disponibilidad_equipos();
+        cambiar_estados('viaje');
 
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
@@ -399,12 +366,11 @@ class _viajeState extends State<viaje> {
 
     try {
       final response = await http.post(
-        Uri.parse('${conexion}gestion_viajes/algoritmos/envio_manual.php'),
+        Uri.parse('${conexion}viajes/algoritmos/envio_manual.php'),
         body: {
-          'id': widget.id_viaje,
+          'id_viaje': widget.id_viaje,
           'id_usuario': id_usuario,
-          'id_status': '103',
-          'status_nombre': 'Viaje finalizado'
+          'id_estatus': '103',
         },
       );
 
@@ -422,7 +388,7 @@ class _viajeState extends State<viaje> {
             widget.estado = 'Finalizado';
           });
           liberar_contenedores();
-          desmontar_equipo();
+          cambiar_estados('disponible');
 
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
@@ -450,7 +416,7 @@ class _viajeState extends State<viaje> {
 
   Future<bool> comprobar_firma(vehiculo_id, String estado_checklist) async {
     bool estado;
-    String ruta = 'gestion_viajes/checklist/firma/comprobar_firma.php';
+    String ruta = 'viajes/checklist/firma/comprobar_firma.php';
 
     final response = await http.post(
       Uri.parse(conexion + ruta),
@@ -554,7 +520,7 @@ class _viajeState extends State<viaje> {
                               'Vehiculo',
                               widget.id_viaje,
                               vehicle_id,
-                              'Tractor',
+                              'tractor',
                               widget.tipo_checklist,
                               'assets/car.png',
                             ),
@@ -573,7 +539,7 @@ class _viajeState extends State<viaje> {
                               'Remolque #1',
                               widget.id_viaje,
                               trailer1_id,
-                              'Remolque',
+                              'remolque',
                               widget.tipo_checklist,
                               'assets/remolque.png',
                             ),
@@ -592,7 +558,7 @@ class _viajeState extends State<viaje> {
                               'Remolque #2',
                               widget.id_viaje,
                               trailer2_id,
-                              'Remolque',
+                              'remolque',
                               widget.tipo_checklist,
                               'assets/remolque.png',
                             ),
@@ -611,7 +577,7 @@ class _viajeState extends State<viaje> {
                               'Dolly',
                               widget.id_viaje,
                               dolly_id,
-                              'Remolque',
+                              'remolque',
                               widget.tipo_checklist,
                               'assets/dolly.png',
                             ),
@@ -630,7 +596,7 @@ class _viajeState extends State<viaje> {
                                   'Motogenerador 1',
                                   widget.id_viaje,
                                   x_motogenerador_1,
-                                  'Motogenerador',
+                                  'motogenerador',
                                   widget.tipo_checklist,
                                   'assets/generador.png')),
                         ),
@@ -647,7 +613,7 @@ class _viajeState extends State<viaje> {
                                   'Motogenerador 2',
                                   widget.id_viaje,
                                   x_motogenerador_2,
-                                  'Motogenerador',
+                                  'motogenerador',
                                   widget.tipo_checklist,
                                   'assets/generador.png')),
                         ),
@@ -848,8 +814,13 @@ class _viajeState extends State<viaje> {
                 print(comprobacion_correos);
                 if (comprobacion_correos == '1') {
                   if (todosVerdaderos(mapa)) {
-                    String comparacion_operador = await comprobar_operador();
-                    if (comparacion_operador == '1') {
+                    final viajesService = ViajesService(context);
+                    bool disponibilidad = await viajesService
+                        .fetchViajes(widget.id_viaje.toString());
+
+                    if (disponibilidad) {
+                      print('El viaje está disponible.');
+                      // Realiza acciones específicas para el caso de disponibilidad.
                       showDialog(
                         context: context,
                         builder: (context) {
@@ -862,16 +833,8 @@ class _viajeState extends State<viaje> {
                         },
                       );
                     } else {
-                      final snackBar = SnackBar(
-                        duration: Duration(seconds: 10),
-                        backgroundColor: const Color.fromARGB(255, 154, 4, 4),
-                        content: Text(comparacion_operador),
-                        action: SnackBarAction(
-                          label: 'Descartar',
-                          onPressed: () {},
-                        ),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                      print('El viaje no está disponible o hubo un error.');
+                      // Realiza acciones específicas para el caso de no disponibilidad.
                     }
                   }
                 }
@@ -1123,7 +1086,7 @@ class _viajeState extends State<viaje> {
 
   Future<List<ImageData>> fetchImageList() async {
     final response = await http.post(
-        Uri.parse('${conexion}gestion_viajes/checklist/firma/cargar_firma.php'),
+        Uri.parse('${conexion}viajes/checklist/firma/cargar_firma.php'),
         body: {
           'viaje_id': widget.id_viaje,
           'tipo_checklist': widget.tipo_checklist,
@@ -1256,26 +1219,33 @@ class _viajeState extends State<viaje> {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? id = prefs.getString('id_usuario');
 
-      final url = '${conexion}gestion_viajes/checklist/firma/guardar_firma.php';
+      final url = '${conexion}viajes/checklist/firma/guardar_firma.php';
       final request = http.MultipartRequest('POST', Uri.parse(url));
       request.fields['id_viaje'] = widget.id_viaje;
       request.fields['id_usuario'] = id.toString();
       request.fields['tipo_checklist'] = widget.tipo_checklist;
 
-      request.files.add(http.MultipartFile('imageBytes',
-          http.ByteStream.fromBytes(imageBytes), imageBytes.length,
-          filename: 'image.jpg'));
+      request.files.add(http.MultipartFile(
+        'imageBytes',
+        http.ByteStream.fromBytes(imageBytes),
+        imageBytes.length,
+        filename: 'image.jpg',
+      ));
 
       final response = await request.send();
 
+      // Obtener el cuerpo de la respuesta
+      final responseBody = await response.stream.bytesToString();
+
       if (response.statusCode == 200) {
+        print('Respuesta completa: $responseBody');
         print('Firma enviada exitosamente');
-        final responseString = await response.stream.bytesToString();
-        if (responseString == 'Imagen guardada exitosamente') {
+
+        if (responseBody == 'Imagen guardada exitosamente') {
           final snackbar = SnackBar(
             backgroundColor: Colors.blue[700],
             content: Text(
-              responseString,
+              responseBody,
               style: const TextStyle(fontSize: 30),
             ),
             duration: const Duration(seconds: 5),
@@ -1290,9 +1260,12 @@ class _viajeState extends State<viaje> {
           });
         }
       } else {
-        print('Error al enviar la firma');
+        print('Error al enviar la firma. Código: ${response.statusCode}');
+        print('Respuesta del servidor: $responseBody');
       }
-    } catch (e) {}
+    } catch (e) {
+      print('Error al enviar la firma: $e');
+    }
   }
 
   Widget firma(String id_viaje, String tipo_checklist) {

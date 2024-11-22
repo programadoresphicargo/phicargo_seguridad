@@ -13,7 +13,7 @@ class Item {
 
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
-      id: json['vehicle_id'],
+      id: json['id'].toString(),
       title: json['name'],
     );
   }
@@ -24,7 +24,7 @@ class Item {
 
 Future<List<Item>> fetchItems() async {
   final response = await http.post(
-    Uri.parse(conexion + 'modulo_maniobras/data/get_flota.php'),
+    Uri.parse(conexion + 'viajes/checklist/buscador/getUnidades.php'),
     body: {
       'fleet_type': 'tractor',
     },

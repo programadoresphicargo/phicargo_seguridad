@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../flota/checklist_estructura.dart';
+import '../equipos/checklist_estructura.dart';
 import 'checklist_estructura_contenedor.dart';
 
 class Panel_contenedor extends StatefulWidget {

@@ -42,12 +42,12 @@ class _MyHomePageState extends State<Checklist_flota> {
 
   Future<void> fetchData() async {
     final response = await http.post(
-      Uri.parse(
-          '${conexion}gestion_viajes/checklist/flota/get_checklist_flota.php'),
+      Uri.parse('${conexion}viajes/checklist/equipos/getChecklistEquipos.php'),
       body: {
         'id_viaje': widget.id_viaje,
-        'id_flota': widget.id_flota[0].toString(),
-        'tipo_flota': widget.tipo_flota
+        'id_equipo': widget.id_flota[0].toString(),
+        'tipo_equipo': widget.tipo_flota,
+        'tipo_checklist': widget.tipo_checklist,
       },
     );
 
@@ -61,63 +61,41 @@ class _MyHomePageState extends State<Checklist_flota> {
             String id_elemento;
             String elemento;
             num? estado;
-            String observacion;
+            String observaciones;
 
-            if (widget.tipo_checklist == 'salida') {
-              id_elemento = records[i]['id_elemento'];
-              elemento = records[i]['nombre_elemento'];
+            id_elemento = records[i]['id_elemento'].toString();
+            elemento = records[i]['nombre_elemento'].toString();
 
-              if (records[i].containsKey('estado_salida')) {
-                estado = records[i]['estado_salida'] == '1' ? 1 : 0;
-              } else {
-                estado = null;
-              }
-
-              if (records[i]['observacion_salida'] != null) {
-                observacion = records[i]['observacion_salida'];
-              } else {
-                observacion = '';
-              }
-              inputControllers.add(
-                TextEditingController(text: records[i]['observacion_salida']),
-              );
+            if (records[i].containsKey('estado')) {
+              estado = records[i]['estado'].toString() == 'true' ? 1 : 0;
             } else {
-              id_elemento = records[i]['id_elemento'];
-              elemento = records[i]['nombre_elemento'];
-
-              if (records[i].containsKey('estado_entrada') &&
-                  records[i]['estado_entrada'] != null) {
-                estado = records[i]['estado_entrada'] == '1' ? 1 : 0;
-              } else {
-                estado = null;
-              }
-
-              if (records[i]['observacion_entrada'] != null) {
-                observacion = records[i]['observacion_entrada'];
-              } else {
-                observacion = '';
-              }
-              inputControllers.add(
-                TextEditingController(text: records[i]['observacion_entrada']),
-              );
+              estado = null;
             }
+
+            if (records[i]['observaciones'] != null) {
+              observaciones = records[i]['observaciones'].toString();
+            } else {
+              observaciones = '';
+            }
+            inputControllers.add(
+              TextEditingController(text: records[i]['observaciones']),
+            );
 
             selectedCheckboxValues.add(Elementos(
               id_elemento: id_elemento,
               elemento: elemento,
               estado: estado,
-              observacion: observacion,
+              observaciones: observaciones,
             ));
           }
 
           for (int i = 0; i < selectedCheckboxValues.length; i++) {
             final item = selectedCheckboxValues[i];
             print('Elemento $i:');
-            print('Elemento $i:');
             print('ID elemento: ${item.id_elemento}');
             print('Nombre elemento: ${item.elemento}');
             print('estado: ${item.estado}');
-            print('observacion: ${item.observacion}');
+            print('observacion: ${item.observaciones}');
           }
 
           for (var controller in inputControllers) {
@@ -127,9 +105,13 @@ class _MyHomePageState extends State<Checklist_flota> {
       } else {
         print('Error en la solicitud: Código de estado ${response.statusCode}');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Error capturado: $e');
+      print('Stack trace: $stackTrace');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response.body), backgroundColor: Colors.orange),
+        SnackBar(
+            content: Text('Ocurrió un error: $e'),
+            backgroundColor: Colors.orange),
       );
     }
   }
@@ -142,39 +124,59 @@ class _MyHomePageState extends State<Checklist_flota> {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> guardar_checklist_flota(array, id_usuario) async {
-      final response = await http.post(
-          Uri.parse(
-              '${conexion}gestion_viajes/checklist/flota/guardar_checklist.php'),
+    Future<void> guardarChecklistEquipo(array, id_usuario) async {
+      try {
+        final response = await http.post(
+          Uri.parse('${conexion}viajes/checklist/equipos/guardarChecklist.php'),
           body: {
             'id_viaje': widget.id_viaje,
-            'id_flota': widget.id_flota[0].toString(),
-            'tipo': widget.tipo_flota,
+            'id_equipo': widget.id_flota[0].toString(),
             'checklist': array.toString(),
             'id_usuario': id_usuario,
             'tipo_checklist': widget.tipo_checklist,
-          });
-      if (response.statusCode == 200) {
-        if (response.body == '1') {
-          final snackBar = SnackBar(
-            backgroundColor: Colors.blue[700],
-            content: const Text(
-              'Información guardada correctamente.',
-              style: TextStyle(fontSize: 30),
-            ),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-          Navigator.pop(context, true);
+          },
+        );
+
+        if (response.statusCode == 200) {
+          if (response.body == '1') {
+            final snackBar = SnackBar(
+              backgroundColor: Colors.blue[700],
+              content: const Text(
+                'Información guardada correctamente.',
+                style: TextStyle(fontSize: 30),
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            Navigator.pop(context, true);
+          } else {
+            final snackBar = SnackBar(
+              backgroundColor: const Color.fromARGB(255, 154, 4, 4),
+              content: Text(
+                response.body,
+                style: const TextStyle(fontSize: 30),
+              ),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
         } else {
           final snackBar = SnackBar(
             backgroundColor: const Color.fromARGB(255, 154, 4, 4),
             content: Text(
-              response.body,
-              style: const TextStyle(fontSize: 30),
+              'Error en la solicitud:  ${response.body}',
+              style: const TextStyle(fontSize: 10),
             ),
           );
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
+      } catch (e) {
+        final snackBar = SnackBar(
+          backgroundColor: Colors.orange,
+          content: Text(
+            'Error: $e',
+            style: const TextStyle(fontSize: 20),
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       }
     }
 
@@ -321,9 +323,9 @@ class _MyHomePageState extends State<Checklist_flota> {
                 num? estado = selectedCheckboxValues[i].estado;
                 if (estado != null && (estado == 0 || estado == 1)) {
                   Map<String, dynamic> jsonData = {
-                    'nombre_elemento': records[i]['id_elemento'],
+                    'id_elemento': records[i]['id_elemento'],
                     'estado': estado,
-                    'observacion': inputControllers[i].text,
+                    'observaciones': inputControllers[i].text,
                   };
                   jsonDataList.add(jsonData);
                 } else {
@@ -342,7 +344,7 @@ class _MyHomePageState extends State<Checklist_flota> {
                     return PinValidatorDialog(
                       onPinVerified: (userId) {
                         print('Usuario verificado: $userId');
-                        guardar_checklist_flota(jsonBody, userId);
+                        guardarChecklistEquipo(jsonBody, userId);
                       },
                     );
                   },
@@ -358,7 +360,7 @@ class _MyHomePageState extends State<Checklist_flota> {
                             fontWeight: FontWeight.w800, fontSize: 40),
                       ),
                       content: const Text(
-                        'Por favor, asegúrate de seleccionar una opción en cada una de las revisiones.\nNo olvides completar todos los campos obligatorios.',
+                        'Por favor, asegúrate de seleccionar una opción en cada una de las revisiones.\nTodos los campos obligatorios.',
                         style: TextStyle(
                             fontSize: 30, fontWeight: FontWeight.w300),
                       ),

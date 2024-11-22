@@ -85,7 +85,7 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
         if (data.isNotEmpty) {
           for (var item in data) {
             mensaje +=
-                ('${item['equipo']} - se encuentra en: ${item['estado']}\n');
+                ('${item['equipo']} - se encuentra en: ${item['estado']} : ${item['referencia']}\n');
           }
 
           _showAlertDialog(mensaje); // Muestra el mensaje si hay unidades

@@ -23,7 +23,7 @@ class _CustodiaState extends State<Custodia> {
   @override
   Widget build(BuildContext context) {
     Future<void> validar_custodia() async {
-      String ruta = 'gestion_viajes/odoo/validar_custodia.php';
+      String ruta = 'viajes/odoo/validar_custodia.php';
       final response;
       response = await http.post(
         Uri.parse(conexion + ruta),
@@ -61,7 +61,7 @@ class _CustodiaState extends State<Custodia> {
             duration: Duration(seconds: 10),
             backgroundColor: Colors.red[700],
             content: Text(
-              'Error custodia: ${response.statusCode}: ${response.reasonPhrase}',
+              'Error_custodia: ${response.statusCode}: ${response.reasonPhrase}',
               style: TextStyle(fontSize: 25),
             ),
           );

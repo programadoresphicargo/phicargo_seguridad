@@ -54,7 +54,7 @@ class PinValidatorDialog extends StatelessWidget {
 
                 final response = await http.post(
                     Uri.parse(
-                        '${conexion}gestion_viajes/checklist/pin/validar_pin.php'),
+                        '${conexion}viajes/checklist/pin/validar_pin.php'),
                     body: {'pin': pinController.text});
                 if (response.statusCode == 200) {
                   final data = jsonDecode(response.body);

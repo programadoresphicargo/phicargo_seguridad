@@ -39,8 +39,8 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
   }
 
   Future<void> _uploadImages(String id_usuario) async {
-    final url = Uri.parse(
-        '${conexion}gestion_viajes/checklist/galeria/guardar_evidencia.php');
+    final url =
+        Uri.parse('${conexion}viajes/checklist/galeria/guardar_evidencia.php');
     var request = http.MultipartRequest('POST', url);
 
     for (int i = 0; i < _imageFiles.length; i++) {
@@ -117,8 +117,7 @@ class _BottomSheetContentState extends State<BottomSheetContent> {
 
   Future<List<ImageData>> fetchImageList() async {
     final response = await http.post(
-        Uri.parse(
-            '${conexion}gestion_viajes/checklist/galeria/cargar_imagenes.php'),
+        Uri.parse('${conexion}viajes/checklist/galeria/cargar_imagenes.php'),
         body: {
           'viaje_id': widget.viaje_id,
           'elemento_id': widget.elemento_id,

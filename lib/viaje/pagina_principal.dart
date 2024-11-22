@@ -7,9 +7,11 @@ import 'package:http/http.dart' as http;
 import 'package:image_card/image_card.dart';
 import 'package:lottie/lottie.dart';
 import 'package:new_version_plus/new_version_plus.dart';
+import 'package:phicargo_seguridad/buscador/operadores.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Alertas/update.dart';
 import '../Conexion/Conexion.dart';
+import '../maniobras/unidades.dart';
 import '../metodos/getUnidades.dart';
 import '../login/login_screen.dart';
 import 'package:data_table_2/data_table_2.dart';
@@ -24,30 +26,51 @@ class Viajes extends StatefulWidget {
 
 class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
   late Future<List<Map<String, dynamic>>> _data;
-  final TextEditingController _referenciaController = TextEditingController();
-  final TextEditingController _operadorController = TextEditingController();
-  final TextEditingController _unidadController = TextEditingController();
-  final TextEditingController _contenedorController = TextEditingController();
   String estado = 'Disponible';
   late TabController _tabController;
 
-  Future<List<Map<String, dynamic>>> fetchData() async {
-    final response = await http.post(
-      Uri.parse('${conexion}gestion_viajes/checklist/viajes.php'),
-      body: {
-        'referencia': _referenciaController.text,
-        'operador': _operadorController.text,
-        'unidad': _unidadController.text,
-        'contenedor': _contenedorController.text,
-        'estado': get_estado(_tabController.index),
-      },
-    );
+  late Future<List<Item>> items;
+  String id_unidad = '';
+  Item? selectedItem;
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      return data.cast<Map<String, dynamic>>();
-    } else {
-      throw Exception('Failed to load data');
+  late Future<List<Item>> itemsOperadores;
+  String id_operador = '';
+  Item? selectedItemOperador;
+
+  Future<List<Map<String, dynamic>>> fetchData() async {
+    var response;
+    try {
+      response = await http.post(
+        Uri.parse('${conexion}viajes/checklist/getViajes.php'),
+        body: {
+          'id_operador': id_operador,
+          'id_unidad': id_unidad,
+          'estado': get_estado(_tabController.index),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 10),
+          content: Text(response.body),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () {
+              print('Acción de deshacer ejecutada');
+            },
+          ),
+        ),
+      );
+      throw Exception('Failed to fetch data: $e');
     }
   }
 
@@ -83,16 +106,9 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
       advancedStatusCheck(newVersion);
     }
     super.initState();
+    items = fetchItems();
+    itemsOperadores = fetchOperadores();
     _data = fetchData();
-    fetchOperadores();
-    UnidadesFetcher.fetchUnidades().then((data) {
-      setState(() {
-        unidades = data;
-      });
-    }).catchError((error) {
-      // Manejar errores aquí
-      print("Error: $error");
-    });
   }
 
   advancedStatusCheck(NewVersionPlus newVersion) async {
@@ -126,7 +142,7 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
   String get_estado(int value) {
     String result = 'Disponible';
     if (value == 0) {
-      result = 'Disponible';
+      result = 'disponible';
     } else if (value == 1) {
       result = 'retorno';
     } else if (value == 2) {
@@ -147,26 +163,6 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
     }
   }
 
-  List<String> operadores = const [];
-  List<String> unidades = const [];
-
-  Future<void> fetchOperadores() async {
-    final response = await http.get(Uri.parse(
-        conexion + 'gestion_viajes/checklist/buscador/getOperadores.php'));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data is List) {
-        setState(() {
-          operadores =
-              data.map((item) => item['nombre_operador'].toString()).toList();
-        });
-      }
-    } else {
-      throw Exception('Fallo al cargar los datos desde la API');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -178,109 +174,140 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
             style: TextStyle(fontSize: 30),
           ),
           bottom: PreferredSize(
-            preferredSize: Size.fromHeight(120.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal, // Desplazamiento horizontal
-              child: Column(
-                children: <Widget>[
-                  TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    labelColor: Colors.blue[700],
-                    dividerColor: Colors.blue[700],
-                    indicatorColor: Colors.blue[700],
-                    unselectedLabelStyle: const TextStyle(
-                        color: Colors.black, fontFamily: 'Product Sans'),
-                    labelStyle: const TextStyle(
-                        fontSize: 30,
-                        fontFamily: 'Product Sans',
-                        fontWeight: FontWeight.bold),
-                    tabs: const [
-                      Tab(text: 'Viajes a ruta'),
-                      Tab(text: 'Viajes de retorno'),
-                      Tab(text: 'Viajes finalizados'),
+            preferredSize: const Size.fromHeight(180.0), // Aumenta la altura
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  labelColor: Colors.blue[700],
+                  dividerColor: Colors.blue[700],
+                  indicatorColor: Colors.blue[700],
+                  unselectedLabelStyle: const TextStyle(
+                      color: Colors.black, fontFamily: 'Product Sans'),
+                  labelStyle: const TextStyle(
+                      fontSize: 30,
+                      fontFamily: 'Product Sans',
+                      fontWeight: FontWeight.bold),
+                  tabs: const [
+                    Tab(text: 'Viajes a ruta'),
+                    Tab(text: 'Viajes de retorno'),
+                    Tab(text: 'Viajes finalizados'),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.only(top: 10),
+                  height: 100.0,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: FutureBuilder<List<Item>>(
+                            future: itemsOperadores,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error: ${snapshot.error}'));
+                              } else if (snapshot.hasData) {
+                                return DropdownSearch<Item>(
+                                  popupProps: const PopupProps.menu(
+                                      showSearchBox: true),
+                                  dropdownDecoratorProps:
+                                      const DropDownDecoratorProps(
+                                    dropdownSearchDecoration: InputDecoration(
+                                      labelText: "Buscar por operador",
+                                    ),
+                                  ),
+                                  clearButtonProps: ClearButtonProps(
+                                    isVisible: true,
+                                    onPressed: () {
+                                      setState(() {
+                                        id_operador = '';
+                                        selectedItemOperador = null;
+                                        _data = fetchData();
+                                      });
+                                    },
+                                  ),
+                                  items: snapshot.data!,
+                                  itemAsString: (Item item) => item.title,
+                                  selectedItem: selectedItemOperador,
+                                  onChanged: (Item? item) {
+                                    setState(() {
+                                      selectedItemOperador = item;
+                                      id_operador = item?.id ?? '';
+                                      _data = fetchData();
+                                    });
+                                  },
+                                );
+                              } else {
+                                return const Center(
+                                    child: Text('No se encontraron datos.'));
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: FutureBuilder<List<Item>>(
+                            future: items,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error: ${snapshot.error}'));
+                              } else if (snapshot.hasData) {
+                                return DropdownSearch<Item>(
+                                  popupProps: const PopupProps.menu(
+                                      showSearchBox: true),
+                                  dropdownDecoratorProps:
+                                      const DropDownDecoratorProps(
+                                    dropdownSearchDecoration: InputDecoration(
+                                      labelText: "Buscar por unidad",
+                                    ),
+                                  ),
+                                  clearButtonProps: ClearButtonProps(
+                                    isVisible: true,
+                                    onPressed: () {
+                                      setState(() {
+                                        id_unidad = '';
+                                        selectedItem = null;
+                                        _data = fetchData();
+                                      });
+                                    },
+                                  ),
+                                  items: snapshot.data!,
+                                  itemAsString: (Item item) => item.title,
+                                  selectedItem: selectedItem,
+                                  onChanged: (Item? item) {
+                                    setState(() {
+                                      selectedItem = item;
+                                      id_unidad = item?.id ?? '';
+                                      _data = fetchData();
+                                    });
+                                  },
+                                );
+                              } else {
+                                return const Center(
+                                    child: Text('No se encontraron datos.'));
+                              }
+                            },
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  Container(
-                    padding: EdgeInsets.only(top: 5),
-                    height: 100.0,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 300,
-                          child: DropdownSearch<String>(
-                            popupProps: PopupProps.menu(
-                              showSearchBox: true,
-                              showSelectedItems: true,
-                              disabledItemFn: (String s) => s.startsWith('I'),
-                            ),
-                            items: operadores,
-                            dropdownDecoratorProps:
-                                const DropDownDecoratorProps(
-                              dropdownSearchDecoration: InputDecoration(
-                                labelText: "Operadores",
-                              ),
-                            ),
-                            selectedItem: _operadorController.text,
-                            onChanged: (selectedValue) {
-                              print('Valor seleccionado: $selectedValue');
-                              setState(() {
-                                _operadorController.text =
-                                    selectedValue.toString();
-                                _data = fetchData();
-                              });
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _operadorController.text = '';
-                              _data = fetchData();
-                            });
-                          },
-                        ),
-                        Container(
-                          width: 200,
-                          child: DropdownSearch<String>(
-                            popupProps: PopupProps.menu(
-                              showSearchBox: true,
-                              showSelectedItems: true,
-                              disabledItemFn: (String s) => s.startsWith('I'),
-                            ),
-                            items: unidades,
-                            dropdownDecoratorProps:
-                                const DropDownDecoratorProps(
-                              dropdownSearchDecoration: InputDecoration(
-                                labelText: "Unidades",
-                              ),
-                            ),
-                            selectedItem: _unidadController.text,
-                            onChanged: (selectedValue) {
-                              print('Valor seleccionado: $selectedValue');
-                              setState(() {
-                                _unidadController.text =
-                                    selectedValue.toString();
-                                _data = fetchData();
-                              });
-                            },
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            setState(() {
-                              _unidadController.text = '';
-                              _data = fetchData();
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

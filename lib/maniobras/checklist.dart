@@ -92,7 +92,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
               id_elemento: id_elemento,
               elemento: elemento,
               estado: estado,
-              observacion: observacion,
+              observaciones: observacion,
             ));
           }
 
@@ -102,7 +102,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
             print('ID elemento: ${item.id_elemento}');
             print('Nombre elemento: ${item.elemento}');
             print('estado: ${item.estado}');
-            print('observacion: ${item.observacion}');
+            print('observacion: ${item.observaciones}');
           }
 
           for (var controller in inputControllers) {
@@ -137,30 +137,49 @@ class _MyHomePageState extends State<checklist_maniobra> {
     );
   }
 
-  Future<void> enviar_correo_inicio(id_usuario) async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/correos/envio_manual.php'),
-      body: {
-        'id_cp': widget.id_maniobra,
-        'tipo': widget.tipo_maniobra,
-        'id_usuario': id_usuario.toString(),
-        'status_ejecutivo': '95',
-        'comentarios': 'Iniciando Maniobra de ${widget.tipo_maniobra}',
-      },
-    );
+  Future<void> enviarCorreoInicio(id_usuario) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
+        body: {
+          'id_maniobra': widget.id_maniobra,
+          'id_estatus': '255',
+          'id_usuario': id_usuario.toString(),
+          'comentarios': 'Iniciando Maniobra',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Correo de inicio enviado con éxito');
+        print(response.body);
+      } else {
+        print('Error al enviar correo de inicio: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error de conexión al enviar correo de inicio: $error');
+    }
   }
 
-  Future<void> enviar_correo_finalizacion(id_usuario) async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/correos/envio_manual.php'),
-      body: {
-        'id_cp': widget.id_maniobra,
-        'tipo': widget.tipo_maniobra,
-        'id_usuario': id_usuario.toString(),
-        'status_ejecutivo': '96',
-        'comentarios': 'Finalización maniobra de ${widget.tipo_maniobra}',
-      },
-    );
+  Future<void> enviarCorreoFinalizacion(id_suario) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
+        body: {
+          'id_maniobra': widget.id_maniobra,
+          'id_estatus': '256',
+          'id_usuario': id_suario,
+          'comentarios': 'Finalización maniobra',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print('Correo de finalización enviado con éxito');
+      } else {
+        print('Error al enviar correo de finalización: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error de conexión al enviar correo de finalización: $error');
+    }
   }
 
   Future<void> activar_maniobra(String idUsuario) async {
@@ -195,6 +214,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
           Icon(Icons.check, color: Colors.white),
           context,
         );
+        enviarCorreoInicio(idUsuario);
       } else {
         alerta(
           'Mensaje',
@@ -226,6 +246,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
               ),
             ),
             (route) => false);
+        enviarCorreoFinalizacion(id_usuario);
       } else if (response.body == '2') {
         alerta_success(
             'Maniobra ya iniciada',

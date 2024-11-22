@@ -10,7 +10,7 @@ Future<bool> comprobar_checklist_contenedor(String id_viaje, String id_cp,
 
   try {
     String ruta =
-        'gestion_viajes/checklist/contenedor/comprobar_checklist_contenedor.php';
+        'viajes/checklist/contenedor/comprobarChecklistContenedor.php';
 
     final response = await http.post(
       Uri.parse(conexion + ruta),
