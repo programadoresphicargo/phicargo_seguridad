@@ -395,7 +395,8 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
                             if ((estado_maniobra == 'activa' &&
                                     tipo_maniobra == 'retiro') ||
                                 (estado_maniobra == 'borrador' &&
-                                    tipo_maniobra == 'ingreso'))
+                                    tipo_maniobra == 'ingreso') ||
+                                (tipo_maniobra == 'local'))
                               Text(
                                 'Contenedores',
                                 style: TextStyle(
@@ -404,7 +405,8 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
                             if ((estado_maniobra == 'activa' &&
                                     tipo_maniobra == 'retiro') ||
                                 (estado_maniobra == 'borrador' &&
-                                    tipo_maniobra == 'ingreso'))
+                                    tipo_maniobra == 'ingreso') ||
+                                (tipo_maniobra == 'local'))
                               SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: Card(

@@ -4,7 +4,7 @@ import 'checklist_estructura.dart';
 
 class Panel_flota extends StatefulWidget {
   final String id_viaje;
-  final List<dynamic> id_flota;
+  final Map<String, dynamic> id_flota;
   final String tipo_flota;
   final String tipo_checklist;
 
@@ -56,7 +56,7 @@ class _PanelState extends State<Panel_flota>
                       ),
                       title: Text(
                         widget.id_flota.isNotEmpty
-                            ? widget.id_flota[1].toString()
+                            ? widget.id_flota['name'].toString()
                             : 'Vehículo',
                         style: const TextStyle(
                             color: Colors.white,

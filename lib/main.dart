@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'login/login_screen.dart';
 import 'menu/menu.dart';
@@ -8,6 +9,7 @@ import 'menu/menu.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   bool isLoggedIn = await verificarSesion();
+  await dotenv.load();
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 

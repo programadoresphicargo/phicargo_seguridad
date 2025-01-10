@@ -334,7 +334,7 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
 
   sesion() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(30), topRight: Radius.circular(30)),
         color: Color.fromARGB(255, 255, 255, 255),

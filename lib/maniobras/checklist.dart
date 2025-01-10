@@ -137,14 +137,14 @@ class _MyHomePageState extends State<checklist_maniobra> {
     );
   }
 
-  Future<void> enviarCorreoInicio(id_usuario) async {
+  Future<void> enviarCorreoInicio(idUsuario) async {
     try {
       final response = await http.post(
         Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
         body: {
           'id_maniobra': widget.id_maniobra,
           'id_estatus': '255',
-          'id_usuario': id_usuario.toString(),
+          'id_usuario': idUsuario.toString(),
           'comentarios': 'Iniciando Maniobra',
         },
       );
@@ -160,14 +160,14 @@ class _MyHomePageState extends State<checklist_maniobra> {
     }
   }
 
-  Future<void> enviarCorreoFinalizacion(id_suario) async {
+  Future<void> enviarCorreoFinalizacion(idUsuario) async {
     try {
       final response = await http.post(
         Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
         body: {
           'id_maniobra': widget.id_maniobra,
           'id_estatus': '256',
-          'id_usuario': id_suario,
+          'id_usuario': idUsuario.toString(),
           'comentarios': 'Finalización maniobra',
         },
       );

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_signature_pad/flutter_signature_pad.dart';
 import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:phicargo_seguridad/viaje/funciones.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Conexion/Conexion.dart';
@@ -59,17 +60,17 @@ class viaje extends StatefulWidget {
 
 class _viajeState extends State<viaje> {
   Map<String, bool> mapa = {};
-
+  String apiUrl = OdooApi();
   bool todosTrue = false;
 
   String name = '';
-  List<dynamic> employee_id = [];
-  List<dynamic> vehicle_id = [];
-  List<dynamic> trailer1_id = [];
-  List<dynamic> trailer2_id = [];
-  List<dynamic> dolly_id = [];
-  List<dynamic> x_motogenerador_1 = [];
-  List<dynamic> x_motogenerador_2 = [];
+  Map<String, dynamic> employee_id = {};
+  Map<String, dynamic> vehicle_id = {};
+  Map<String, dynamic> trailer1_id = {};
+  Map<String, dynamic> trailer2_id = {};
+  Map<String, dynamic> dolly_id = {};
+  Map<String, dynamic> x_motogenerador_1 = {};
+  Map<String, dynamic> x_motogenerador_2 = {};
   bool custodia = false;
 
   bool todosVerdaderos(Map<String, bool> mapa) {
@@ -110,30 +111,21 @@ class _viajeState extends State<viaje> {
   }
 
   Future<void> getViaje(String id_viaje) async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/odoo/getViaje.php'),
-      body: {'id_viaje': id_viaje},
-    );
+    final response =
+        await http.get(Uri.parse('${apiUrl}/tms_travel/get_by_id/$id_viaje'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       setState(() {
         print(data);
-        name = data[0]['name']?.toString() ?? '';
-        vehicle_id = data[0]['vehicle_id'] is List ? data[0]['vehicle_id'] : [];
-        trailer1_id =
-            data[0]['trailer1_id'] is List ? data[0]['trailer1_id'] : [];
-        trailer2_id =
-            data[0]['trailer2_id'] is List ? data[0]['trailer2_id'] : [];
-        dolly_id = data[0]['dolly_id'] is List ? data[0]['dolly_id'] : [];
-        employee_id =
-            data[0]['employee_id'] is List ? data[0]['employee_id'] : [];
-        x_motogenerador_1 = data[0]['x_motogenerador_1'] is List
-            ? data[0]['x_motogenerador_1']
-            : [];
-        x_motogenerador_2 = data[0]['x_motogenerador_2'] is List
-            ? data[0]['x_motogenerador_2']
-            : [];
+        name = data[0]['name'] ?? '';
+        vehicle_id = data[0]['vehicle'] ?? {};
+        trailer1_id = data[0]['trailer1'] ?? {};
+        trailer2_id = data[0]['trailer2'] ?? {};
+        dolly_id = data[0]['dolly'] ?? {};
+        employee_id = data[0]['employee'] ?? {};
+        x_motogenerador_1 = data[0]['x_motogenerador1'] ?? {};
+        x_motogenerador_2 = data[0]['x_motogenerador2'] ?? {};
       });
     } else {
       throw Exception('Failed to load data from server');
@@ -170,9 +162,8 @@ class _viajeState extends State<viaje> {
   }
 
   Future<List<Record>> getCartas(String id_viaje) async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/odoo/getCartas.php'),
-      body: {'id_viaje': id_viaje},
+    final response = await http.get(
+      Uri.parse('$apiUrl/tms_waybill/get_by_travel_id/$id_viaje'),
     );
     if (response.statusCode == 200) {
       List<dynamic> jsonData = jsonDecode(response.body);
@@ -186,6 +177,18 @@ class _viajeState extends State<viaje> {
   Future<void> cambiar_estados(String estado) async {
     final response = await http.post(
       Uri.parse('${conexion}viajes/disponibilidad/cambiar_estados.php'),
+      body: {'id_viaje': widget.id_viaje, 'estado': estado},
+    );
+
+    if (response.statusCode == 200) {
+    } else {
+      throw Exception('Failed to load data from server');
+    }
+  }
+
+  Future<void> cambiar_estado_operador(String estado) async {
+    final response = await http.post(
+      Uri.parse('${conexion}viajes/disponibilidad/cambiar_estado_operador.php'),
       body: {'id_viaje': widget.id_viaje, 'estado': estado},
     );
 
@@ -322,6 +325,7 @@ class _viajeState extends State<viaje> {
 
         disponibilidad_contenedores();
         cambiar_estados('viaje');
+        cambiar_estado_operador('viaje');
 
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
@@ -389,7 +393,7 @@ class _viajeState extends State<viaje> {
           });
           liberar_contenedores();
           cambiar_estados('disponible');
-
+          cambiar_estado_operador('disponible');
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => Menu(
@@ -466,15 +470,25 @@ class _viajeState extends State<viaje> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    name,
-                    style: TextStyle(fontSize: 60, color: Colors.blue[700]),
+                  SizedBox(
+                    width: 400,
+                    child: Badge(
+                      padding: const EdgeInsets.all(10),
+                      backgroundColor: Colors.blue[600],
+                      textStyle: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Product Sans'),
+                      textColor: Colors.white,
+                      label: Text(name),
+                      isLabelVisible: true,
+                    ),
                   ),
                 ],
               ),
               Card(
                 child: Padding(
-                  padding: EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(18),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,14 +496,14 @@ class _viajeState extends State<viaje> {
                       Text(
                         'Operador asignado',
                         style: TextStyle(
-                          fontSize: 40,
+                          fontSize: 30,
                           color: Colors.blue[700],
                         ),
                       ),
                       Text(
-                        employee_id.length > 1 ? employee_id[1].toString() : '',
+                        employee_id['name'].toString(),
                         style: const TextStyle(
-                            fontSize: 30, fontWeight: FontWeight.w100),
+                            fontSize: 35, fontWeight: FontWeight.w100),
                       )
                     ],
                   ),
@@ -507,14 +521,13 @@ class _viajeState extends State<viaje> {
                   padding: EdgeInsets.all(10),
                   child: ResponsiveGridRow(
                     children: [
-                      if (vehicle_id.length > 1 &&
-                          vehicle_id[1].toString().isNotEmpty)
+                      if (vehicle_id.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                            height: 100,
+                            height: 130,
                             alignment: Alignment(0, 0),
                             child: card_flota(
                               'Vehiculo',
@@ -526,14 +539,13 @@ class _viajeState extends State<viaje> {
                             ),
                           ),
                         ),
-                      if (trailer1_id.length > 1 &&
-                          trailer1_id[1].toString().isNotEmpty)
+                      if (trailer1_id.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                            height: 100,
+                            height: 130,
                             alignment: Alignment(0, 0),
                             child: card_flota(
                               'Remolque #1',
@@ -545,14 +557,13 @@ class _viajeState extends State<viaje> {
                             ),
                           ),
                         ),
-                      if (trailer2_id.length > 1 &&
-                          trailer2_id[1].toString().isNotEmpty)
+                      if (trailer2_id.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                            height: 100,
+                            height: 130,
                             alignment: Alignment(0, 0),
                             child: card_flota(
                               'Remolque #2',
@@ -564,14 +575,13 @@ class _viajeState extends State<viaje> {
                             ),
                           ),
                         ),
-                      if (dolly_id.length > 1 &&
-                          dolly_id[1].toString().isNotEmpty)
+                      if (dolly_id.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                            height: 100,
+                            height: 130,
                             alignment: Alignment(0, 0),
                             child: card_flota(
                               'Dolly',
@@ -583,14 +593,13 @@ class _viajeState extends State<viaje> {
                             ),
                           ),
                         ),
-                      if (x_motogenerador_1.length > 1 &&
-                          x_motogenerador_1[1].toString().isNotEmpty)
+                      if (x_motogenerador_1.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                              height: 100,
+                              height: 130,
                               alignment: Alignment(0, 0),
                               child: card_flota(
                                   'Motogenerador 1',
@@ -600,14 +609,13 @@ class _viajeState extends State<viaje> {
                                   widget.tipo_checklist,
                                   'assets/generador.png')),
                         ),
-                      if (x_motogenerador_2.length > 1 &&
-                          x_motogenerador_2[1].toString().isNotEmpty)
+                      if (x_motogenerador_2.isNotEmpty)
                         ResponsiveGridCol(
                           lg: 3,
                           md: 6,
                           sm: 12,
                           child: Container(
-                              height: 100,
+                              height: 130,
                               alignment: Alignment(0, 0),
                               child: card_flota(
                                   'Motogenerador 2',
@@ -635,11 +643,12 @@ class _viajeState extends State<viaje> {
                     future: getCartas(widget.id_viaje),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
+                        return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Center(child: Text('No hay datos disponibles'));
+                        return const Center(
+                            child: Text('No hay datos disponibles'));
                       }
 
                       return DataTable(
@@ -991,11 +1000,16 @@ class _viajeState extends State<viaje> {
     );
   }
 
-  Widget card_flota(String title, String id_viaje, List<dynamic> id_flota,
-      String tipo_flota, String tipo_checklist, String ruta) {
+  Widget card_flota(
+      String title,
+      String id_viaje,
+      Map<String, dynamic> id_flota,
+      String tipo_flota,
+      String tipo_checklist,
+      String ruta) {
     return FutureBuilder<bool>(
       future: comprobar_checklist_flota(
-          id_viaje, id_flota[0].toString(), tipo_checklist, context),
+          id_viaje, id_flota['id'].toString(), tipo_checklist, context),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         Color fondo = Colors.grey.shade100;
         Color borde = Colors.white;
@@ -1047,6 +1061,8 @@ class _viajeState extends State<viaje> {
             child: Padding(
               padding: EdgeInsets.all(20),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   CircleAvatar(
                     backgroundColor: Colors.blue.shade100,
@@ -1058,10 +1074,11 @@ class _viajeState extends State<viaje> {
                     ),
                   ),
                   const SizedBox(
-                    width: 12,
+                    width: 15,
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         title,
@@ -1069,9 +1086,9 @@ class _viajeState extends State<viaje> {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        id_flota[1].toString(),
+                        id_flota['name'].toString(),
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w200),
+                            fontSize: 25, fontWeight: FontWeight.w200),
                       ),
                     ],
                   ),
@@ -1329,7 +1346,7 @@ class _viajeState extends State<viaje> {
                   ),
                   const Text(
                     'Firma del operador',
-                    style: TextStyle(fontSize: 15),
+                    style: TextStyle(fontSize: 25),
                   ),
                 ],
               ),

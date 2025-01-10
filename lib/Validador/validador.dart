@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:stack_trace/stack_trace.dart';
 
 import '../Conexion/Conexion.dart';
 
@@ -50,29 +51,53 @@ class PinValidatorDialog extends StatelessWidget {
             ),
             onPressed: () async {
               if (pinController.text != '') {
-                Navigator.of(context).pop();
-
-                final response = await http.post(
+                try {
+                  final response = await http.post(
                     Uri.parse(
                         '${conexion}viajes/checklist/pin/validar_pin.php'),
-                    body: {'pin': pinController.text});
-                if (response.statusCode == 200) {
-                  final data = jsonDecode(response.body);
-                  print(data);
-                  if (data['respuesta'] == 'correcto') {
-                    onPinVerified(data['id_usuario']);
+                    body: {'pin': pinController.text},
+                  );
+                  if (response.statusCode == 200) {
+                    final data = jsonDecode(response.body);
+                    print(data);
+                    if (data['respuesta'] == 'correcto') {
+                      onPinVerified(data['id_usuario']);
+                    } else {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Color.fromARGB(255, 154, 4, 4),
+                          content: Text(
+                            'PIN Inválido',
+                            style: TextStyle(fontSize: 25),
+                          ),
+                        ),
+                      );
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         backgroundColor: Color.fromARGB(255, 154, 4, 4),
                         content: Text(
-                          'PIN Inválido',
+                          'Error en el servidor',
                           style: TextStyle(fontSize: 25),
                         ),
                       ),
                     );
                   }
-                } else {}
+                } catch (e, stackTrace) {
+                  // Captura el error y el stack trace
+                  final trace = Trace.from(stackTrace);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color.fromARGB(255, 154, 4, 4),
+                      content: Text(
+                        'Error en: $e\nLínea: ${trace.frames.first.line}',
+                        style: const TextStyle(fontSize: 25),
+                      ),
+                    ),
+                  );
+                }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -83,7 +108,6 @@ class PinValidatorDialog extends StatelessWidget {
                     ),
                   ),
                 );
-                Navigator.of(context).pop();
               }
             }),
       ],

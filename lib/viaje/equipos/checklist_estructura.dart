@@ -12,7 +12,7 @@ import '../galeria/menu_fotos.dart';
 
 class Checklist_flota extends StatefulWidget {
   late String id_viaje;
-  final List<dynamic> id_flota;
+  final Map<String, dynamic> id_flota;
   late String tipo_flota;
   late String tipo_checklist;
   Checklist_flota(
@@ -45,7 +45,7 @@ class _MyHomePageState extends State<Checklist_flota> {
       Uri.parse('${conexion}viajes/checklist/equipos/getChecklistEquipos.php'),
       body: {
         'id_viaje': widget.id_viaje,
-        'id_equipo': widget.id_flota[0].toString(),
+        'id_equipo': widget.id_flota['id'].toString(),
         'tipo_equipo': widget.tipo_flota,
         'tipo_checklist': widget.tipo_checklist,
       },
@@ -130,7 +130,7 @@ class _MyHomePageState extends State<Checklist_flota> {
           Uri.parse('${conexion}viajes/checklist/equipos/guardarChecklist.php'),
           body: {
             'id_viaje': widget.id_viaje,
-            'id_equipo': widget.id_flota[0].toString(),
+            'id_equipo': widget.id_flota['id'].toString(),
             'checklist': array.toString(),
             'id_usuario': id_usuario,
             'tipo_checklist': widget.tipo_checklist,

@@ -1,0 +1,36 @@
+class TravelData {
+  final String? name;
+  final Vehicle? vehicle;
+ final Vehicle? trailer1;
+  final Vehicle? trailer2;
+
+  TravelData({
+    this.name,
+    this.vehicle,
+    this.trailer1,
+    this.trailer2,
+  });
+
+  factory TravelData.fromJson(Map<String, dynamic> json) {
+    return TravelData(
+      name: json['name'],
+      vehicle: json['vehicle'] != null ? Vehicle.fromJson(json['vehicle']) : null,
+      trailer1: json['trailer1'] != null ? Vehicle.fromJson(json['trailer1']) : null,
+      trailer2: json['trailer2'] != null ? Vehicle.fromJson(json['trailer2']) : null,
+    );
+  }
+}
+
+class Vehicle {
+  final int? id;
+  final String? name;
+
+  Vehicle({this.id, this.name});
+
+  factory Vehicle.fromJson(Map<String, dynamic> json) {
+    return Vehicle(
+      id: json['id'],
+      name: json['name'],
+    );
+  }
+}

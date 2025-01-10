@@ -7,6 +7,7 @@ import 'package:image_card/image_card.dart';
 import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
 
+import '../Api/api.dart';
 import '../Conexion/Conexion.dart';
 import '../metodos/convertir_fecha.dart';
 import 'index_checklist.dart';
@@ -28,6 +29,7 @@ class CustomDataTable extends StatefulWidget {
 class _CustomDataTableState extends State<CustomDataTable> {
   int _currentSortColumn = 0;
   bool _isAscending = true;
+  String apiUrl = OdooApi();
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +134,7 @@ class _CustomDataTableState extends State<CustomDataTable> {
         onSelectChanged: (_) => _onRowTap(data),
         cells: [
           DataCell(
-            Container(
+            SizedBox(
               width: 130,
               child: Badge(
                 padding: EdgeInsets.all(6),
@@ -213,10 +215,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('${conexion}viajes/odoo/getCartas.php'),
-        body: {'id_viaje': id_viaje},
-      );
+      final response = await http
+          .get(Uri.parse('$apiUrl/tms_waybill/get_by_travel_id/$id_viaje'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -244,10 +244,8 @@ class _CustomDataTableState extends State<CustomDataTable> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('${conexion}viajes/odoo/getViaje.php'),
-        body: {'id_viaje': id_viaje},
-      );
+      final response =
+          await http.get(Uri.parse('$apiUrl/tms_travel/get_by_id/$id_viaje'));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -334,28 +332,20 @@ class _CustomDataTableState extends State<CustomDataTable> {
                                   rows: _viajeData.map((viaje) {
                                     return DataRow(cells: [
                                       DataCell(Text(viaje['name'] ?? 'N/A')),
-                                      DataCell(Text(viaje['vehicle_id'] is List
-                                          ? (viaje['vehicle_id'] as List)[1]
-                                          : 'N/A')),
-                                      DataCell(Text(viaje['trailer1_id'] is List
-                                          ? (viaje['trailer1_id'] as List)[1]
-                                          : 'N/A')),
-                                      DataCell(Text(viaje['trailer2_id'] is List
-                                          ? (viaje['trailer2_id'] as List)[1]
-                                          : 'N/A')),
-                                      DataCell(Text(viaje['dolly_id'] is List
-                                          ? (viaje['dolly_id'] as List)[1]
-                                          : 'N/A')),
+                                      DataCell(Text(viaje['vehicle']?['name'] ??
+                                          'Sin datos')), // Validación añadida
                                       DataCell(Text(
-                                          viaje['x_motogenerador_1'] is List
-                                              ? (viaje['x_motogenerador_1']
-                                                  as List)[1]
-                                              : 'N/A')),
+                                          viaje['trailer1']?['name'] ?? '')),
                                       DataCell(Text(
-                                          viaje['x_motogenerador_2'] is List
-                                              ? (viaje['x_motogenerador_2']
-                                                  as List)[1]
-                                              : 'N/A')),
+                                          viaje['trailer2']?['name'] ?? '')),
+                                      DataCell(
+                                          Text(viaje['dolly']?['name'] ?? '')),
+                                      DataCell(Text(viaje['x_motogenerador1']
+                                              ?['name'] ??
+                                          '')),
+                                      DataCell(Text(viaje['x_motogenerador2']
+                                              ?['name'] ??
+                                          '')),
                                     ]);
                                   }).toList(),
                                 ),
