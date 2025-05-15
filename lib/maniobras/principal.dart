@@ -1,7 +1,8 @@
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:phicargo_seguridad/buscador/buscadores.dart';
 import 'tabla.dart';
-import 'unidades.dart';
+import '../buscador/unidades.dart';
 
 class MyTabBarApp extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _MyTabBarAppState extends State<MyTabBarApp>
   @override
   void initState() {
     super.initState();
-    items = fetchItems();
+    items = fetchVehiculos();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
       setState(() {
@@ -119,14 +120,14 @@ class _MyTabBarAppState extends State<MyTabBarApp>
             child: TabBarView(
               controller: _tabController,
               children: [
-                tabla_maniobras(
+                tablaManiobras(
                   estado_maniobra: 'borrador',
-                  unidad: vehiculo,
+                  vehicle_id: vehiculo,
                   color_view: _appBarColor,
                 ),
-                tabla_maniobras(
+                tablaManiobras(
                   estado_maniobra: 'activa',
-                  unidad: vehiculo,
+                  vehicle_id: vehiculo,
                   color_view: _appBarColor,
                 ),
               ],

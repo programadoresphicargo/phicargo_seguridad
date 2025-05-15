@@ -4,11 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:new_version_plus/new_version_plus.dart';
-import 'package:phicargo_seguridad/buscador/operadores.dart';
+import 'package:phicargo_seguridad/buscador/buscadores.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Alertas/update.dart';
 import '../Conexion/Conexion.dart';
-import '../maniobras/unidades.dart';
+import '../buscador/unidades.dart';
 import '../login/login_screen.dart';
 
 import 'tabla.dart';
@@ -100,7 +100,7 @@ class _ViajesState extends State<Viajes> with SingleTickerProviderStateMixin {
       advancedStatusCheck(newVersion);
     }
     super.initState();
-    items = fetchItems();
+    items = fetchVehiculos();
     itemsOperadores = fetchOperadores();
     _data = fetchData();
   }
