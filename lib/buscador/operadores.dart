@@ -1,11 +1,11 @@
 import 'package:http/http.dart' as http;
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'dart:convert';
-import '../Conexion/Conexion.dart';
 import '../maniobras/unidades.dart';
 
 Future<List<Item>> fetchOperadores() async {
-  final response = await http.post(
-      Uri.parse('${conexion}viajes/checklist/buscador/getOperadores.php'));
+  String apiUrl = OdooApi();
+  final response = await http.get(Uri.parse('$apiUrl/drivers/'));
 
   if (response.statusCode == 200) {
     List jsonResponse = json.decode(response.body);

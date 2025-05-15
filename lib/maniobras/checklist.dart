@@ -9,7 +9,7 @@ import '../Validador/validador.dart';
 import '../alerta/alerta.dart';
 import '../conexion/conexion.dart';
 import '../menu/menu.dart';
-import '../viaje/elementos.dart';
+import '../Viajes/elementos.dart';
 import 'fotos.dart';
 
 class checklist_maniobra extends StatefulWidget {

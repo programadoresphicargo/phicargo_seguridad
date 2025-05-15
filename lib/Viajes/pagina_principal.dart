@@ -2,21 +2,15 @@ import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_card/image_card.dart';
-import 'package:lottie/lottie.dart';
 import 'package:new_version_plus/new_version_plus.dart';
 import 'package:phicargo_seguridad/buscador/operadores.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Alertas/update.dart';
 import '../Conexion/Conexion.dart';
 import '../maniobras/unidades.dart';
-import '../metodos/getUnidades.dart';
 import '../login/login_screen.dart';
-import 'package:data_table_2/data_table_2.dart';
 
-import 'index_checklist.dart';
 import 'tabla.dart';
 
 class Viajes extends StatefulWidget {

@@ -8,7 +8,6 @@ import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
 
 import '../Api/api.dart';
-import '../Conexion/Conexion.dart';
 import '../metodos/convertir_fecha.dart';
 import 'index_checklist.dart';
 

@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../login/login_screen.dart';
 import '../maniobras/principal.dart';
-import '../viaje/pagina_principal.dart';
+import '../Viajes/pagina_principal.dart';
 
 class NavigationDrawerWidget extends StatelessWidget {
   final padding = EdgeInsets.symmetric(horizontal: 20);

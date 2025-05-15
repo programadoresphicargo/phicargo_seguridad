@@ -1,18 +1,12 @@
 import 'dart:convert';
 
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
 import 'package:http/http.dart' as http;
 import 'package:phicargo_seguridad/maniobras/detalle_maniobra.dart';
 
 import '../Conexion/Conexion.dart';
 import '../metodos/convertir_fecha.dart';
-import '../metodos/getUnidades.dart';
-import 'formatear_hora.dart';
 
 class tabla_maniobras extends StatefulWidget {
   @override

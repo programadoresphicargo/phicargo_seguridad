@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../viaje/pagina_principal.dart';
+import '../Viajes/pagina_principal.dart';
 
 class MyDesktopBody extends StatelessWidget {
   const MyDesktopBody({Key? key}) : super(key: key);

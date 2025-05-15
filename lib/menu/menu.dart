@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../drawer/drawer.dart';
 import '../maniobras/principal.dart';
-import '../viaje/pagina_principal.dart';
+import '../Viajes/pagina_principal.dart';
 
 class Menu extends StatefulWidget {
   int pagina;

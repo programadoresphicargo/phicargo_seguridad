@@ -1,6 +1,5 @@
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import '../metodos/getUnidades.dart';
 import 'tabla.dart';
 import 'unidades.dart';
 

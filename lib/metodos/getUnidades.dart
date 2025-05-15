@@ -3,8 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../conexion/conexion.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class UnidadesFetcher {
   static Future<List<String>> fetchUnidades() async {
