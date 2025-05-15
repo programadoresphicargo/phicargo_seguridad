@@ -1,17 +1,14 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:phicargo_seguridad/maniobras/detalle_maniobra.dart';
-
-import '../Conexion/Conexion.dart';
 import '../metodos/convertir_fecha.dart';
 
 class tablaManiobras extends StatefulWidget {
   String estado_maniobra;
-  String vehicle_id;
+  int vehicle_id;
   Color color_view;
 
   tablaManiobras(
@@ -20,18 +17,29 @@ class tablaManiobras extends StatefulWidget {
       required this.vehicle_id,
       required this.color_view});
 
-  _tabla_maniobrasState createState() => _tabla_maniobrasState();
+  @override
+  _tablaManiobrasState createState() => _tablaManiobrasState();
 }
 
-class _tabla_maniobrasState extends State<tablaManiobras> {
-  Future<List<dynamic>> fetchData() async {
+class _tablaManiobrasState extends State<tablaManiobras> {
+  Future<List<dynamic>> fetchData({int? vehicleIdFiltro}) async {
     String apiUrl = OdooApi();
     try {
       final uri = Uri.parse('$apiUrl/maniobras/estado/')
           .replace(queryParameters: {'estado': widget.estado_maniobra});
       final response = await http.get(uri);
+
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
+
+        if (vehicleIdFiltro != 0) {
+          final filtrados = jsonData.where((item) {
+            return item["vehicle_id"] == vehicleIdFiltro;
+          }).toList();
+
+          return filtrados;
+        }
+
         return jsonData;
       } else {
         throw Exception('Error al cargar los datos');
@@ -77,18 +85,45 @@ class _tabla_maniobrasState extends State<tablaManiobras> {
                   color: Colors.white,
                   width: MediaQuery.of(context).size.width,
                   child: FutureBuilder<List<dynamic>>(
-                    future: fetchData(),
+                    future: fetchData(vehicleIdFiltro: widget.vehicle_id),
                     builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(
-                            child: CircularProgressIndicator(
-                          color: widget.color_view,
-                        ));
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                CircularProgressIndicator(
+                                  color: widget.color_view,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Cargando datos...',
+                                  style: TextStyle(
+                                      fontSize: 26, color: widget.color_view),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: Center(
+                            child: Text('Error: ${snapshot.error}'),
+                          ),
+                        );
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                            child: Text('No hay datos disponibles'));
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.6,
+                          child: const Center(
+                            child: Text(
+                              'No existen resultados',
+                              style: TextStyle(fontSize: 25),
+                            ),
+                          ),
+                        );
                       } else {
                         return LayoutBuilder(
                           builder: (BuildContext context,

@@ -14,7 +14,7 @@ class _MyTabBarAppState extends State<MyTabBarApp>
   late TabController _tabController;
   Color _appBarColor = const Color.fromARGB(255, 25, 118, 210);
   late Future<List<Item>> items;
-  String vehiculo = '';
+  int vehiculo = 0;
   Item? selectedItem;
 
   @override
@@ -92,9 +92,8 @@ class _MyTabBarAppState extends State<MyTabBarApp>
                       isVisible: true,
                       onPressed: () {
                         setState(() {
-                          vehiculo = '';
-                          selectedItem =
-                              null; // Limpia la selección en el DropdownSearch
+                          vehiculo = 0;
+                          selectedItem = null;
                         });
                       },
                     ),
@@ -104,9 +103,8 @@ class _MyTabBarAppState extends State<MyTabBarApp>
                         selectedItem, // Vincula la opción seleccionada con el estado
                     onChanged: (Item? item) {
                       setState(() {
-                        selectedItem =
-                            item; // Actualiza el estado con la nueva selección
-                        vehiculo = item?.id ?? '';
+                        selectedItem = item;
+                        vehiculo = int.parse(item!.id);
                       });
                     },
                   );
