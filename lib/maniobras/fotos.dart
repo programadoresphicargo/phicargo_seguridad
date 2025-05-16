@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../Conexion/Conexion.dart';
 import '../Validador/validador.dart';
-import '../maniobras/galeria.dart';
+import '../Maniobras/galeria.dart';
 
 class menu_fotos_maniobras extends StatefulWidget {
   String id_maniobra;

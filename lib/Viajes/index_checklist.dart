@@ -112,7 +112,7 @@ class _viajeState extends State<viaje> {
 
   Future<void> getViaje(String id_viaje) async {
     final response =
-        await http.get(Uri.parse('${apiUrl}/tms_travel/get_by_id/$id_viaje'));
+        await http.get(Uri.parse('$apiUrl/tms_travel/get_by_id/$id_viaje'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

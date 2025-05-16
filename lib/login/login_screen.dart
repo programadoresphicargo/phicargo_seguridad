@@ -1,14 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_shadow/simple_shadow.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-
-import '../alerta/alerta.dart';
-import '../conexion/conexion.dart';
 import '../menu/menu.dart';
 import 'responsive.dart';
 
@@ -20,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  String apiUrl = OdooApi();
   final TextEditingController usuario = TextEditingController();
   final TextEditingController contrasena = TextEditingController();
   @override
@@ -40,81 +38,83 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         },
       );
+
       String user = usuario.text;
       String password = contrasena.text;
-      final dynamic data;
-      var response;
+
+      if (user == '' || password == '') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color.fromARGB(255, 154, 4, 4),
+            content: const Text('Ingresar usuario y contraseña.'),
+            action: SnackBarAction(
+              label: 'Descartar',
+              onPressed: () {},
+            ),
+          ),
+        );
+        Navigator.of(context).pop();
+        return;
+      }
 
       try {
-        // Envía la solicitud HTTP para la autenticación
-        response = await http.post(
-          Uri.parse('${conexion}gestion_viajes/checklist/login/login.php'),
-          body: {'usuario': user, 'password': password},
+        final response = await http.post(
+          Uri.parse('$apiUrl/users/login'),
+          headers: {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+          },
+          body: jsonEncode({
+            'username': user,
+            'password': password,
+          }),
         );
 
+        if (!mounted) return;
+
+        Navigator.of(context).pop();
+
         if (response.statusCode == 200) {
-          data = json.decode(response.body);
-          print(response.body);
+          final data = json.decode(response.body);
           if (data.containsKey('error')) {
-            Navigator.of(context).pop();
-            final snackBar = SnackBar(
-              backgroundColor: const Color.fromARGB(255, 154, 4, 4),
-              content: Text('Error al iniciar sesión: ' + response.body),
-              action: SnackBarAction(
-                label: 'Descartar',
-                onPressed: () {},
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: const Color.fromARGB(255, 154, 4, 4),
+                content: Text('Error al iniciar sesión: ${data['error']}'),
+                action: SnackBarAction(
+                  label: 'Descartar',
+                  onPressed: () {},
+                ),
               ),
             );
-            ScaffoldMessenger.of(context).showSnackBar(snackBar);
           } else {
-            print('User found:');
-            print(data);
+            final idUsuario = data['user']['id_usuario'].toString();
 
-            // Access specific data fields
-            final idUsuario = data['id_usuario'];
-            final usuario = data['usuario'];
-            final nombre = data['nombre'];
-            final tipo = data['tipo'];
-
-            print('ID: $idUsuario');
-            print('Username: $usuario');
-            print('Name: $nombre');
-            print('Type: $tipo');
             guardarSesion(idUsuario);
 
-            // ignore: use_build_context_synchronously
             Navigator.pushAndRemoveUntil<dynamic>(
               context,
               CupertinoPageRoute<dynamic>(
-                builder: (BuildContext context) => Menu(
-                  pagina: 0,
-                ),
+                builder: (BuildContext context) => Menu(pagina: 0),
               ),
               (route) => false,
             );
           }
         } else {
-          Navigator.of(context).pop();
-          print('Error');
-          error(
-              'Error',
-              response.body.toString(),
-              const Icon(
-                Icons.error_outline_sharp,
-                color: Colors.white,
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color.fromARGB(255, 154, 4, 4),
+              content: Text('Error al iniciar sesión:${response.body}'),
+              action: SnackBarAction(
+                label: 'Descartar',
+                onPressed: () {},
               ),
-              context);
-        }
-      } catch ($e) {
-        Navigator.of(context).pop();
-        error(
-            'Error',
-            response.body,
-            const Icon(
-              Icons.error_outline_sharp,
-              color: Colors.white,
             ),
-            context);
+          );
+        }
+      } catch (e) {
+        if (mounted) Navigator.of(context).pop();
+        print(e);
       }
     }
 
@@ -148,6 +148,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   "https://phi-cargo.com/wp-content/uploads/2021/05/logo-phicargo-vertical.png",
                                   color:
                                       const Color.fromARGB(255, 255, 255, 255),
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.broken_image,
+                                      size: 60,
+                                      color: Colors.white,
+                                    );
+                                  },
                                 ),
                               ),
                             ),
