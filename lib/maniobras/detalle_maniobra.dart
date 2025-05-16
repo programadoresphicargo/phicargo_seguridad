@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:phicargo_seguridad/metodos/convertir_fecha.dart';
 import 'package:responsive_grid/responsive_grid.dart';
 import '../Alertas/alerta.dart';
@@ -60,7 +61,7 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
   late String motogenerador_1 = '';
   late String motogenerador_2 = '';
   late String estado_maniobra = '';
-
+  List<Record> misDatos = [];
   @override
   void initState() {
     super.initState();
@@ -155,18 +156,17 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
   }
 
   Future<void> getManiobra(String id_maniobra) async {
+    String apiUrl = OdooApi();
+
     try {
       setState(() {
         isLoading = true;
       });
-      final response = await http.post(
-        Uri.parse('${conexion}modulo_maniobras/maniobra/get_maniobra.php'),
-        body: {'id_maniobra': id_maniobra},
-      );
+      final response =
+          await http.get(Uri.parse('$apiUrl/maniobras/by_id/$id_maniobra'));
 
       if (response.statusCode == 200) {
-        final List<dynamic> dataList = json.decode(response.body);
-        final Map<String, dynamic> data = dataList[0];
+        final Map<String, dynamic> data = json.decode(response.body);
 
         setState(() {
           tipo_maniobra = data['tipo_maniobra'] ?? '';
@@ -180,6 +180,9 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
           motogenerador_1 = data['motogenerador_1_name'] ?? '';
           motogenerador_2 = data['motogenerador_2_name'] ?? '';
           estado_maniobra = data['estado_maniobra'] ?? '';
+          misDatos = (data['contenedores_ligados'] as List<dynamic>)
+              .map((jsonItem) => Record.fromJson(jsonItem))
+              .toList();
         });
       } else {
         print('Error al obtener datos: ${response.statusCode}');
@@ -190,20 +193,6 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
       setState(() {
         isLoading = false;
       });
-    }
-  }
-
-  Future<List<Record>> getContenedores(String id_maniobra) async {
-    final response = await http.post(
-      Uri.parse(
-          '${conexion}modulo_maniobras/maniobra/get_maniobra_contenedores.php'),
-      body: {'id_maniobra': id_maniobra},
-    );
-    if (response.statusCode == 200) {
-      List<dynamic> jsonData = jsonDecode(response.body);
-      return jsonData.map((record) => Record.fromJson(record)).toList();
-    } else {
-      throw Exception('Error al cargar los datos');
     }
   }
 
@@ -411,108 +400,81 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
                                 scrollDirection: Axis.horizontal,
                                 child: Card(
                                   elevation: 0,
-                                  child: FutureBuilder<List<Record>>(
-                                    future: getContenedores(widget.id_maniobra),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Center(
-                                            child: CircularProgressIndicator(
-                                          color: widget.color_view,
-                                        ));
-                                      } else if (snapshot.hasError) {
-                                        return Center(
-                                            child: Text(
-                                                'Error: ${snapshot.error}'));
-                                      } else if (!snapshot.hasData ||
-                                          snapshot.data!.isEmpty) {
-                                        return const Center(
-                                            child: Text(
-                                                'No hay datos disponibles'));
-                                      }
+                                  child: DataTable(
+                                    columnSpacing: 16,
+                                    columns: const <DataColumn>[
+                                      DataColumn(
+                                        label: Text(
+                                          'Referencia contenedor',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'Referencia contenedor 2',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'Validar',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: misDatos.map((record) {
+                                      mapa[record.id] ??= false;
 
-                                      return DataTable(
-                                        columnSpacing: 16,
-                                        columns: const <DataColumn>[
-                                          DataColumn(
-                                            label: Text(
-                                              'Referencia contenedor',
-                                              style: TextStyle(fontSize: 20),
+                                      return DataRow(
+                                        selected: mapa[record.id]!,
+                                        cells: <DataCell>[
+                                          DataCell(
+                                            Text(
+                                              record.x_reference,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w300),
                                             ),
                                           ),
-                                          DataColumn(
-                                            label: Text(
-                                              'Referencia contenedor 2',
-                                              style: TextStyle(fontSize: 20),
+                                          DataCell(
+                                            Text(
+                                              record.x_reference_2 != 'null'
+                                                  ? record.x_reference_2
+                                                  : '',
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w300,
+                                              ),
                                             ),
                                           ),
-                                          DataColumn(
-                                            label: Text(
-                                              'Validar',
-                                              style: TextStyle(fontSize: 20),
+                                          DataCell(
+                                            Checkbox(
+                                              activeColor: widget.color_view,
+                                              checkColor: Colors.white,
+                                              value: mapa[record.id],
+                                              onChanged: (bool? value) {
+                                                setState(() {
+                                                  mapa[record.id] = value!;
+                                                });
+
+                                                setState(() {
+                                                  if (todosVerdaderos(mapa)) {
+                                                    todosTrue = true;
+                                                  } else {
+                                                    todosTrue = false;
+                                                  }
+                                                });
+                                              },
                                             ),
                                           ),
                                         ],
-                                        rows: snapshot.data!.map((record) {
-                                          mapa[record.id] ??= false;
-
-                                          return DataRow(
-                                            selected: mapa[record.id]!,
-                                            cells: <DataCell>[
-                                              DataCell(
-                                                Text(
-                                                  record.x_reference,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                      fontSize: 20,
-                                                      fontWeight:
-                                                          FontWeight.w300),
-                                                ),
-                                              ),
-                                              DataCell(
-                                                Text(
-                                                  record.x_reference_2 != 'null'
-                                                      ? record.x_reference_2
-                                                      : '',
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.w300,
-                                                  ),
-                                                ),
-                                              ),
-                                              DataCell(
-                                                Checkbox(
-                                                  activeColor:
-                                                      widget.color_view,
-                                                  checkColor: Colors.white,
-                                                  value: mapa[record.id],
-                                                  onChanged: (bool? value) {
-                                                    setState(() {
-                                                      mapa[record.id] = value!;
-                                                    });
-
-                                                    setState(() {
-                                                      if (todosVerdaderos(
-                                                          mapa)) {
-                                                        todosTrue = true;
-                                                      } else {
-                                                        todosTrue = false;
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        }).toList(),
                                       );
-                                    },
+                                    }).toList(),
                                   ),
                                 ),
-                              ),
+                              )
                           ],
                         ),
                       ),
