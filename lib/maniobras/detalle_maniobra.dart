@@ -68,18 +68,13 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
     getManiobra(widget.id_maniobra);
   }
 
-  Future<bool> comprobar_disponibilidad_unidades() async {
+  Future<bool> comprobarDisponibilidadUnidades() async {
+    String apiUrl = OdooApi();
     String mensaje = '';
     try {
-      final response = await http.post(
-        Uri.parse(
-            '${conexion}modulo_maniobras/codigos/comprobar_disponibilidad.php'),
-        body: {
-          'id_maniobra': widget.id_maniobra,
-        },
-      );
+      final response = await http.get(Uri.parse(
+          '$apiUrl/maniobras/comprobar_disponibilidad_equipo/${widget.id_maniobra}'));
 
-      print(response.body); // Verifica la respuesta
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
 
@@ -89,11 +84,10 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
                 ('${item['equipo']} - se encuentra en: ${item['estado']} : ${item['referencia']}\n');
           }
 
-          _showAlertDialog(mensaje); // Muestra el mensaje si hay unidades
-          return false; // Debería retornar false si hay unidades ocupadas
+          _showAlertDialog(mensaje);
+          return false;
         }
 
-        // Si no hay unidades ocupadas, retorna true para continuar
         return true;
       } else {
         alerta(response.body, response.body, Icon(Icons.error), context);
@@ -495,16 +489,12 @@ class _detalle_maniobraState extends State<detalle_maniobra> {
               ),
               onPressed: () async {
                 if (estado_maniobra == 'borrador') {
-                  bool resultado = await comprobar_disponibilidad_unidades();
-                  print('Respuesta: ' + resultado.toString()); // Para depurar
-
-                  // Si el resultado es falso, no navega
+                  bool resultado = await comprobarDisponibilidadUnidades();
                   if (!resultado) {
                     return;
                   }
                 }
 
-                // Si el resultado es true o si estado_maniobra no es 'borrador', navega
                 Navigator.of(context).push(
                   CupertinoPageRoute(
                     builder: (context) => checklist_maniobra(
