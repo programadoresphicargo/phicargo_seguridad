@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:phicargo_seguridad/conexion/conexion.dart';
+import 'package:phicargo_seguridad/Api/api.dart';
 
 class ViajesService {
   final BuildContext context;
@@ -9,10 +9,12 @@ class ViajesService {
   ViajesService(this.context);
 
   Future<bool> comprobarDisponibilidadEquipoViaje(String idViaje) async {
+    String apiUrl = OdooApi();
+
     try {
       final url = Uri.parse(
-          '${conexion}viajes/disponibilidad/comprobar_disponibilidad.php');
-      final response = await http.post(url, body: {'id_viaje': idViaje});
+          '$apiUrl/tms_travel/comprobar_disponibilidad_equipo/$idViaje');
+      final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = jsonDecode(response.body);
