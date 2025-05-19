@@ -174,30 +174,6 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> cambiar_estados(String estado) async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/disponibilidad/cambiar_estados.php'),
-      body: {'id_viaje': widget.id_viaje, 'estado': estado},
-    );
-
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
-  Future<void> cambiar_estado_operador(String estado) async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/disponibilidad/cambiar_estado_operador.php'),
-      body: {'id_viaje': widget.id_viaje, 'estado': estado},
-    );
-
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
   Future<void> disponibilidad_contenedores() async {
     final response = await http.post(
       Uri.parse('${conexion}viajes/disponibilidad/contenedores.php'),
@@ -324,8 +300,6 @@ class _viajeState extends State<viaje> {
         });
 
         disponibilidad_contenedores();
-        cambiar_estados('viaje');
-        cambiar_estado_operador('viaje');
 
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
@@ -393,8 +367,6 @@ class _viajeState extends State<viaje> {
             widget.estado = 'Finalizado';
           });
           liberar_contenedores();
-          cambiar_estados('disponible');
-          cambiar_estado_operador('disponible');
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => Menu(
@@ -1044,9 +1016,12 @@ class _viajeState extends State<viaje> {
                   tipo_checklist: tipo_checklist),
             ))
                 .then((result) {
-              if (result != null) {
-                getViaje(widget.id_viaje);
-                getCartas(widget.id_viaje);
+              print('Ejecutando de nuevo');
+              getViaje(widget.id_viaje);
+              getCartas(widget.id_viaje);
+              comprobar_firma(widget.id_viaje, widget.tipo_checklist);
+              if (widget.tipo_checklist == 'salida') {
+                getCustodia(widget.id_viaje);
               }
             });
           },
