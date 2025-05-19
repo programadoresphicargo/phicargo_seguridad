@@ -8,7 +8,6 @@ import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:phicargo_seguridad/metodos/convertir_fecha.dart';
 import 'package:responsive_grid/responsive_grid.dart';
 import '../Alertas/alerta.dart';
-import '../conexion/conexion.dart';
 import 'checklist.dart';
 
 class Record {

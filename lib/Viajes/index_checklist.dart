@@ -226,20 +226,19 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<String> comprobar_correos() async {
-    final response = await http.post(
-      Uri.parse(
-          '${conexion}viajes/correos_electronicos/correosLigadosComprobacion.php'),
-      body: {
-        'id_viaje': widget.id_viaje,
-      },
-    );
+  Future<String> comprobarCorreos() async {
+    final response = await http.get(
+        Uri.parse('$apiUrl/tms_travel/correos/id_viaje/${widget.id_viaje}'));
 
     if (response.statusCode == 200) {
-      if (response.body == '1') {
+      final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
         const snackBar = SnackBar(
           backgroundColor: Colors.green,
-          content: Text('Viaje con correos ligados.'),
+          content: Text(
+            'Viaje con correos ligados.',
+            style: TextStyle(fontSize: 26),
+          ),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         return '1';
@@ -281,10 +280,11 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> iniciar_viaje(String id_usuario) async {
+  Future<void> iniciarViaje(String id_usuario) async {
+    String apiUrl = OdooApi();
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return const AlertDialog(
           title: Text('Procesando'),
@@ -301,16 +301,16 @@ class _viajeState extends State<viaje> {
     );
 
     final response = await http.post(
-      Uri.parse('${conexion}viajes/algoritmos/envio_manual.php'),
+      Uri.parse('$apiUrl/tms_travel/reportes_estatus_viajes/envio_estatus/'),
       body: {
         'id_viaje': widget.id_viaje,
         'id_usuario': id_usuario,
         'id_estatus': '1',
       },
     );
-
     if (response.statusCode == 200) {
-      if (response.body == '1') {
+      final resultado = jsonDecode(response.body);
+      if (resultado['status'] == 'success') {
         const snackBar = SnackBar(
           backgroundColor: Colors.green,
           content: Text(
@@ -349,10 +349,10 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> finalizar_viaje(String id_usuario) async {
+  Future<void> finalizarViaje(String id_usuario) async {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return const AlertDialog(
           title: Text('Procesando'),
@@ -370,7 +370,7 @@ class _viajeState extends State<viaje> {
 
     try {
       final response = await http.post(
-        Uri.parse('${conexion}viajes/algoritmos/envio_manual.php'),
+        Uri.parse('$apiUrl/tms_travel/reportes_estatus_viajes/envio_estatus/'),
         body: {
           'id_viaje': widget.id_viaje,
           'id_usuario': id_usuario,
@@ -378,8 +378,9 @@ class _viajeState extends State<viaje> {
         },
       );
 
+      final resultado = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        if (response.body == '1') {
+        if (resultado['status'] == 'success') {
           const snackBar = SnackBar(
             backgroundColor: Colors.green,
             content: Text(
@@ -819,13 +820,14 @@ class _viajeState extends State<viaje> {
             FloatingActionButton.extended(
               backgroundColor: Colors.green,
               onPressed: () async {
-                String comprobacion_correos = await comprobar_correos();
-                print(comprobacion_correos);
-                if (comprobacion_correos == '1') {
+                String comprobacionCorreos = await comprobarCorreos();
+                print(comprobacionCorreos);
+                if (comprobacionCorreos == '1') {
                   if (todosVerdaderos(mapa)) {
                     final viajesService = ViajesService(context);
-                    bool disponibilidad = await viajesService
-                        .fetchViajes(widget.id_viaje.toString());
+                    bool disponibilidad =
+                        await viajesService.comprobarDisponibilidadEquipoViaje(
+                            widget.id_viaje.toString());
 
                     if (disponibilidad) {
                       print('El viaje está disponible.');
@@ -836,7 +838,7 @@ class _viajeState extends State<viaje> {
                           return PinValidatorDialog(
                             onPinVerified: (userId) {
                               print('Usuario verificado: $userId');
-                              iniciar_viaje(userId);
+                              iniciarViaje(userId);
                             },
                           );
                         },
@@ -876,7 +878,7 @@ class _viajeState extends State<viaje> {
                       return PinValidatorDialog(
                         onPinVerified: (userId) {
                           print('Usuario verificado: $userId');
-                          finalizar_viaje(userId);
+                          finalizarViaje(userId);
                         },
                       );
                     },

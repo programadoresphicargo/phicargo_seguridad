@@ -8,7 +8,7 @@ class ViajesService {
 
   ViajesService(this.context);
 
-  Future<bool> fetchViajes(String idViaje) async {
+  Future<bool> comprobarDisponibilidadEquipoViaje(String idViaje) async {
     try {
       final url = Uri.parse(
           '${conexion}viajes/disponibilidad/comprobar_disponibilidad.php');
