@@ -1,44 +1,25 @@
 import 'package:flutter/material.dart';
-import '../../conexion/conexion.dart';
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:http/http.dart' as http;
 
-Future<bool> comprobar_checklist_contenedor(String id_viaje, String id_cp,
-    String estado_checklist, BuildContext context) async {
+Future<bool> comprobarChecklistContenedor(String idViaje, String idCp,
+    String tipoChecklist, BuildContext context) async {
   bool estado = false;
+  String apiUrl = OdooApi();
 
-  try {
-    String ruta =
-        'viajes/checklist/contenedor/comprobarChecklistContenedor.php';
+  final uri = Uri.parse(
+    '$apiUrl/tms_travel/checklist/comprobar_contenedores/?id_viaje=$idViaje&id_cp=$idCp&tipo_checklist=$tipoChecklist',
+  );
+  final response = await http.get(uri);
 
-    final response = await http.post(
-      Uri.parse(conexion + ruta),
-      body: {
-        'id_viaje': id_viaje,
-        'id_cp': id_cp,
-        'tipo_checklist': estado_checklist
-      },
-    );
-
-    if (response.statusCode == 200) {
-      if (response.body == '1') {
-        estado = true;
-      } else {
-        estado = false;
-      }
+  if (response.statusCode == 200) {
+    if (response.body == 'true') {
+      estado = true;
     } else {
-      throw Exception('Failed to load data from server');
+      estado = false;
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.red,
-        content: Text(
-          'Error al comprobar el checklist: $e',
-          style: TextStyle(fontSize: 16),
-        ),
-      ),
-    );
+    return estado;
+  } else {
+    throw Exception('Failed to load data from server');
   }
-
-  return estado;
 }

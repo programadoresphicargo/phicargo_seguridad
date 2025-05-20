@@ -676,7 +676,7 @@ class _viajeState extends State<viaje> {
                               ),
                               DataCell(
                                 FutureBuilder<bool>(
-                                  future: comprobar_checklist_contenedor(
+                                  future: comprobarChecklistContenedor(
                                       widget.id_viaje,
                                       record.id,
                                       widget.tipo_checklist,
@@ -952,7 +952,7 @@ class _viajeState extends State<viaje> {
       String tipo_checklist,
       String ruta) {
     return FutureBuilder<bool>(
-      future: comprobar_checklist_flota(
+      future: comprobarChecklistFlota(
           id_viaje, id_flota['id'].toString(), tipo_checklist, context),
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         Color fondo = Colors.grey.shade100;
