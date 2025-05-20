@@ -174,34 +174,6 @@ class _viajeState extends State<viaje> {
     }
   }
 
-  Future<void> disponibilidad_contenedores() async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/disponibilidad/contenedores.php'),
-      body: {
-        'id': widget.id_viaje,
-      },
-    );
-
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
-  Future<void> liberar_contenedores() async {
-    final response = await http.post(
-      Uri.parse('${conexion}viajes/disponibilidad/liberar_contenedores.php'),
-      body: {
-        'id': widget.id_viaje,
-      },
-    );
-
-    if (response.statusCode == 200) {
-    } else {
-      throw Exception('Failed to load data from server');
-    }
-  }
-
   Future<String> comprobarCorreos() async {
     final response = await http.get(
         Uri.parse('$apiUrl/tms_travel/correos/id_viaje/${widget.id_viaje}'));
@@ -299,8 +271,6 @@ class _viajeState extends State<viaje> {
           widget.estado = 'ruta';
         });
 
-        disponibilidad_contenedores();
-
         Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => Menu(
@@ -366,7 +336,7 @@ class _viajeState extends State<viaje> {
           setState(() {
             widget.estado = 'Finalizado';
           });
-          liberar_contenedores();
+
           Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
                 builder: (context) => Menu(
