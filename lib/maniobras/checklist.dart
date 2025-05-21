@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'dart:convert';
 import '../Alertas/alerta.dart';
 import '../Validador/validador.dart';
@@ -27,6 +28,7 @@ class checklist_maniobra extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<checklist_maniobra> {
+  String apiUrl = OdooApi();
   List<dynamic> records = [];
   List<Elementos> selectedCheckboxValues = [];
   List<TextEditingController> inputControllers = [];
@@ -116,157 +118,110 @@ class _MyHomePageState extends State<checklist_maniobra> {
     }
   }
 
-  Future<void> cambiar_estados() async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/codigos/cambiar_estados.php'),
-      body: {
-        'id_cp': widget.id_maniobra,
-        'tipo': widget.tipo_maniobra,
-      },
-    );
-  }
-
-  Future<void> liberar() async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/codigos/liberar.php'),
-      body: {
-        'id_cp': widget.id_maniobra,
-        'tipo': widget.tipo_maniobra,
-      },
-    );
-  }
-
-  Future<void> enviarCorreoInicio(idUsuario) async {
+  Future<void> activarManiobra(String idUsuario) async {
     try {
       final response = await http.post(
-        Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
+        Uri.parse(
+            '$apiUrl/maniobras/reportes_estatus_maniobras/envio_estatus/'),
         body: {
           'id_maniobra': widget.id_maniobra,
           'id_estatus': '255',
-          'id_usuario': idUsuario.toString(),
-          'comentarios': 'Iniciando Maniobra',
+          'id_usuario': idUsuario,
         },
       );
 
       if (response.statusCode == 200) {
-        print('Correo de inicio enviado con éxito');
-        print(response.body);
+        final data = jsonDecode(response.body);
+
+        if (data['status'] == "success") {
+          alerta_success(
+            'Proceso exitoso',
+            data['message'],
+            const Icon(Icons.check, color: Colors.white),
+            context,
+          );
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => Menu(pagina: 1)),
+            (route) => false,
+          );
+        } else {
+          alerta(
+            'Mensaje',
+            data['message'] ?? 'Ocurrió un error inesperado.',
+            const Icon(Icons.error, color: Colors.white),
+            context,
+          );
+        }
       } else {
-        print('Error al enviar correo de inicio: ${response.statusCode}');
+        alerta(
+          'Error de red',
+          'Error ${response.statusCode}: ${response.reasonPhrase}',
+          const Icon(Icons.wifi_off, color: Colors.white),
+          context,
+        );
       }
-    } catch (error) {
-      print('Error de conexión al enviar correo de inicio: $error');
+    } catch (e) {
+      alerta(
+        'Error',
+        'Error al activar maniobra: $e',
+        const Icon(Icons.warning, color: Colors.white),
+        context,
+      );
     }
   }
 
-  Future<void> enviarCorreoFinalizacion(idUsuario) async {
+  Future<void> finalizarManiobra(String idUsuario) async {
     try {
       final response = await http.post(
-        Uri.parse('${conexion}modulo_maniobras/correos/envio_correo.php'),
+        Uri.parse(
+            '$apiUrl/maniobras/reportes_estatus_maniobras/envio_estatus/'),
         body: {
           'id_maniobra': widget.id_maniobra,
           'id_estatus': '256',
-          'id_usuario': idUsuario.toString(),
-          'comentarios': 'Finalización maniobra',
+          'id_usuario': idUsuario,
         },
       );
 
       if (response.statusCode == 200) {
-        print('Correo de finalización enviado con éxito');
+        try {
+          final data = jsonDecode(response.body);
+
+          if (data['status'] == "success") {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => Menu(pagina: 1)),
+              (route) => false,
+            );
+          } else {
+            error(
+              'Mensaje',
+              data['message'] ?? 'No se pudo finalizar la maniobra.',
+              const Icon(Icons.error, color: Colors.white),
+              context,
+            );
+          }
+        } catch (_) {
+          error(
+            'Error inesperado',
+            response.body,
+            const Icon(Icons.warning, color: Colors.white),
+            context,
+          );
+        }
       } else {
-        print('Error al enviar correo de finalización: ${response.statusCode}');
+        throw Exception(
+            'Error ${response.statusCode}: ${response.reasonPhrase}');
       }
-    } catch (error) {
-      print('Error de conexión al enviar correo de finalización: $error');
-    }
-  }
-
-  Future<void> activar_maniobra(String idUsuario) async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/maniobra/activar_maniobra.php'),
-      body: {
-        'id_maniobra': widget.id_maniobra,
-        'id_usuario': idUsuario,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body); // Convierte el JSON en un Map
-      alerta_success(
-        data.toString(),
-        'Maniobra iniciada correctamente',
-        Icon(Icons.check, color: Colors.white),
+    } catch (e) {
+      error(
+        'Error de red',
+        'No se pudo finalizar la maniobra. Detalle: $e',
+        const Icon(Icons.wifi_off, color: Colors.white),
         context,
       );
-      if (data['success'] == 1) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => Menu(
-              pagina: 1,
-            ),
-          ),
-          (route) => false,
-        );
-        alerta_success(
-          'Proceso exitoso',
-          'Maniobra iniciada correctamente',
-          Icon(Icons.check, color: Colors.white),
-          context,
-        );
-        enviarCorreoInicio(idUsuario);
-      } else {
-        alerta(
-          'Mensaje',
-          data,
-          Icon(Icons.error, color: Colors.white),
-          context,
-        );
-      }
-    }
-  }
-
-  Future<void> finalizar_maniobra(id_usuario) async {
-    final response = await http.post(
-      Uri.parse('${conexion}modulo_maniobras/maniobra/finalizar_maniobra.php'),
-      body: {'id_maniobra': widget.id_maniobra, 'id_usuario': id_usuario},
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body); // Convierte el JSON en un Map
-      if (data['success'] == 1) {
-        const snackBar = SnackBar(
-          content: Text('Maniobra finalizada correctamente.'),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => Menu(
-                pagina: 1,
-              ),
-            ),
-            (route) => false);
-        enviarCorreoFinalizacion(id_usuario);
-      } else if (response.body == '2') {
-        alerta_success(
-            'Maniobra ya iniciada',
-            'La maniobra ya se encuentra activa',
-            Icon(
-              Icons.check,
-              color: Colors.white,
-            ),
-            context);
-      } else {
-        error(
-            'Mensaje',
-            response.body,
-            Icon(
-              Icons.check,
-              color: Colors.white,
-            ),
-            context);
-      }
-    } else {
-      throw Exception('Failed to load data from server');
     }
   }
 
@@ -284,14 +239,11 @@ class _MyHomePageState extends State<checklist_maniobra> {
       if (response.statusCode == 200) {
         if (response.body == '1') {
           if (widget.estado_maniobra == 'borrador') {
-            print('activando');
-            activar_maniobra(idUsuario);
+            activarManiobra(idUsuario);
           } else if (widget.estado_maniobra == 'activa') {
-            print('finalizando');
-            finalizar_maniobra(idUsuario);
+            finalizarManiobra(idUsuario);
           } else {
             print(widget.estado_maniobra);
-            print('ningun caso');
           }
           final snackBar = SnackBar(
             backgroundColor: const Color.fromARGB(255, 9, 91, 157),
