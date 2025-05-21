@@ -1,10 +1,8 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:stack_trace/stack_trace.dart';
-
-import '../Conexion/Conexion.dart';
 
 class PinValidatorDialog extends StatelessWidget {
   final Function(String) onPinVerified;
@@ -14,6 +12,7 @@ class PinValidatorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextEditingController pinController = TextEditingController();
+    String apiUrl = OdooApi();
 
     return AlertDialog(
       title: const Text('Ingrese su PIN'),
@@ -53,15 +52,12 @@ class PinValidatorDialog extends StatelessWidget {
               if (pinController.text != '') {
                 try {
                   final response = await http.post(
-                    Uri.parse(
-                        '${conexion}viajes/checklist/pin/validar_pin.php'),
-                    body: {'pin': pinController.text},
+                    Uri.parse('$apiUrl/users/by_pin/${pinController.text}'),
                   );
                   if (response.statusCode == 200) {
                     final data = jsonDecode(response.body);
-                    print(data);
-                    if (data['respuesta'] == 'correcto') {
-                      onPinVerified(data['id_usuario']);
+                    if (data is Map && data.containsKey('id_usuario')) {
+                      onPinVerified(data['id_usuario'].toString());
                     } else {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(

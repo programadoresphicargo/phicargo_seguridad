@@ -225,7 +225,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
     }
   }
 
-  Future<void> guardar_checklist_maniobra(array, idUsuario) async {
+  Future<void> guardarChecklistManiobra(array, idUsuario) async {
     final response;
     try {
       response = await http.post(
@@ -521,7 +521,7 @@ class _MyHomePageState extends State<checklist_maniobra> {
                         return PinValidatorDialog(
                           onPinVerified: (userId) {
                             print('Usuario verificado: $userId');
-                            guardar_checklist_maniobra(jsonBody, userId);
+                            guardarChecklistManiobra(jsonBody, userId);
                           },
                         );
                       },
