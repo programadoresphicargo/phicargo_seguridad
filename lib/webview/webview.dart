@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phicargo_seguridad/Api/api.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewExample extends StatefulWidget {
@@ -14,6 +15,7 @@ class _WebViewExampleState extends State<WebViewExample> {
     super.initState();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setUserAgent('com.phicargo.admin')
       ..loadRequest(
           Uri.parse('https://phides-client.phicargo-sistemas.online/menu'));
   }
@@ -21,8 +23,9 @@ class _WebViewExampleState extends State<WebViewExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Phi-cargo')),
-      body: WebViewWidget(controller: _controller),
+      body: SafeArea(
+        child: WebViewWidget(controller: _controller),
+      ),
     );
   }
 }
