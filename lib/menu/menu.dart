@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phicargo_seguridad/webview/webview.dart';
 
 import '../drawer/drawer.dart';
 import '../maniobras/principal.dart';
@@ -14,7 +15,7 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [Viajes(), MyTabBarApp()];
+  final List<Widget> _pages = [Viajes(), MyTabBarApp(), WebViewExample()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -76,11 +77,15 @@ class _MenuState extends State<Menu> {
                     ),
                     NavigationRailDestination(
                       icon: ImageIcon(
-                        AssetImage("assets/conta2.jpg"),
+                        const AssetImage("assets/conta2.jpg"),
                         color: myTextColor,
                         size: 40,
                       ),
                       label: Text('Maniobras'),
+                    ),
+                    const NavigationRailDestination(
+                      icon: Icon(Icons.home),
+                      label: Text('Módulos'),
                     ),
                   ],
                 ),
@@ -112,6 +117,10 @@ class _MenuState extends State<Menu> {
                       size: 40,
                     ),
                     label: 'Maniobras',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.home),
+                    label: 'Módulos',
                   ),
                 ],
               ),
