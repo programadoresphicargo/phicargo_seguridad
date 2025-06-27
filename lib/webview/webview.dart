@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phicargo_seguridad/Api/api.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class WebViewExample extends StatefulWidget {
   @override
@@ -8,23 +7,26 @@ class WebViewExample extends StatefulWidget {
 }
 
 class _WebViewExampleState extends State<WebViewExample> {
-  late final WebViewController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setUserAgent('com.phicargo.admin')
-      ..loadRequest(
-          Uri.parse('https://phides-client.phicargo-sistemas.online/menu'));
-  }
+  late InAppWebViewController webViewController;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Prueba')),
       body: SafeArea(
-        child: WebViewWidget(controller: _controller),
+        child: InAppWebView(
+          initialSettings: InAppWebViewSettings(
+            javaScriptEnabled: true,
+            domStorageEnabled: true,
+            userAgent: "com.phicargo.admin",
+          ),
+          initialUrlRequest: URLRequest(
+            url: WebUri('https://phides-client.phicargo-sistemas.online/menu'),
+          ),
+          onWebViewCreated: (controller) {
+            webViewController = controller;
+          },
+        ),
       ),
     );
   }
