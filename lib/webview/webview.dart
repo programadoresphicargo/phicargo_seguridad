@@ -12,7 +12,6 @@ class _WebViewExampleState extends State<WebViewExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Prueba')),
       body: SafeArea(
         child: InAppWebView(
           initialSettings: InAppWebViewSettings(
