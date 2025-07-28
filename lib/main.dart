@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -10,6 +11,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   bool isLoggedIn = await verificarSesion();
   await dotenv.load();
+  await Permission.camera.request();
+  await Permission.microphone.request();
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
